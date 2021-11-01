@@ -11,59 +11,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import("//build/test.gni")
 
-import("//build/ohos.gni")
-SOURCE_DIR = "//base/telephony/data_storage"
-
-ohos_executable("tel_data_storage_test") {
-    sources = [
-        "$SOURCE_DIR/common/src/rdb_base_callback.cpp",
-        "$SOURCE_DIR/common/src/rdb_base_helper.cpp",
-        "$SOURCE_DIR/sms_mms/src/rdb_sms_mms_callback.cpp",
-        "$SOURCE_DIR/sms_mms/src/rdb_sms_mms_helper.cpp",
-        "$SOURCE_DIR/pdp_profile/src/rdb_pdp_profile_callback.cpp",
-        "$SOURCE_DIR/pdp_profile/src/rdb_pdp_profile_helper.cpp",
-        "$SOURCE_DIR/common/src/parser_util.cpp",
-        "$SOURCE_DIR/common/src/preferences_util.cpp",
-        "$SOURCE_DIR/test/data_storage_test.cpp",
-    ]
-
-    include_dirs = [
-        "$SOURCE_DIR/common/include",
-        "$SOURCE_DIR/sim/include",
-        "$SOURCE_DIR/pdp_profile/include",
-        "$SOURCE_DIR/sms_mms/include"
-    ]
-
-    deps = [
-        "//foundation/aafwk/standard/interfaces/innerkits/ability_manager:ability_manager",
-        "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
-        "//foundation/distributedschedule/dmsfwk/interfaces/innerkits/uri:zuri",
-        "//utils/native/base:utils",
-        "//third_party/jsoncpp:jsoncpp",
-    ]
-
-    external_deps = [
-        "ces_standard:cesfwk_innerkits",
-        "safwk:system_ability_fwk",
-        "appexecfwk_standard:libeventhandler",
-        "samgr_L2:samgr_proxy",
-        "ipc:ipc_core",
-        "aafwk_standard:want",
-        "native_appdatamgr:native_rdb",
-        "native_appdatamgr:native_appdatafwk",
-        "native_appdatamgr:native_dataability",
-        "native_appdatamgr:native_preferences"
-    ]
-
-    if (is_standard_system) {
-        external_deps += [ "hiviewdfx_hilog_native:libhilog" ]
-    } else {
-        external_deps += [ "hilog:libhilog" ]
-    }
-
-    part_name = "data_storage"
-    subsystem_name = "telephony"
+group("unittest") {
+  testonly = true
+  deps = []
+  deps += [ "unittest/data_gtest:unittest" ]
 }
-
-

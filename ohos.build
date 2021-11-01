@@ -4,8 +4,12 @@
         "data_storage": {
             "module_list": [
                 "//base/telephony/data_storage:tel_data_storage"
+            ],
+            "test_list": [
+                "//base/telephony/data_storage/test:unittest"
             ]
         }
+
     }
 }
 

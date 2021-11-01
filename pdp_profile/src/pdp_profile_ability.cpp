@@ -54,13 +54,13 @@ int PdpProfileAbility::Insert(const Uri &uri, const NativeRdb::ValuesBucket &val
     switch (pdpProfileUriType) {
         case PdpProfileUriType::PDP_PROFILE: {
             helper_.Insert(id, value, TABLE_PDP_PROFILE);
-            DATA_STORAGE_LOGD("PdpProfileAbility::Insert SMS_MMS##id = %{public}lld\n", id);
+            DATA_STORAGE_LOGD("PdpProfileAbility::Insert SMS_MMS##id = %{public}" PRId64 "\n", id);
             break;
         }
         default:
             break;
     }
-    DATA_STORAGE_LOGD("PdpProfileAbility::Insert end##id = %{public}lld\n", id);
+    DATA_STORAGE_LOGD("PdpProfileAbility::Insert end##id = %{public}" PRId64 "\n", id);
     return id;
 }
 

@@ -54,13 +54,13 @@ int SimAbility::Insert(const Uri &uri, const NativeRdb::ValuesBucket &value)
     switch (simUriType) {
         case SimUriType::SIM_INFO: {
             helper_.Insert(id, value, TABLE_SIM_INFO);
-            DATA_STORAGE_LOGD("SimAbility::Insert SMS_MMS##id = %{public}lld\n", id);
+            DATA_STORAGE_LOGD("SimAbility::Insert SMS_MMS##id = %{public}" PRId64 "\n", id);
             break;
         }
         default:
             break;
     }
-    DATA_STORAGE_LOGD("SimAbility::Insert end##id = %{public}lld\n", id);
+    DATA_STORAGE_LOGD("SimAbility::Insert end##id = %{public}" PRId64 "\n", id);
     return id;
 }
 

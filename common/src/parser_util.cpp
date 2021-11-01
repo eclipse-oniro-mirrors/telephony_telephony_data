@@ -66,7 +66,7 @@ int ParserUtil::ParserPdpProfileJson(std::vector<PdpProfile> &vec)
         utils->Refresh();
     }
     DATA_STORAGE_LOGD("ParserUtil::ParserPdpProfileJson##apnVersion = %{public}d, profileVersion  = %{public}d, "
-                      "vec.size = %{public}d\n", apnVersion, profileVersion, vec.size());
+                      "vec.size = %{public}zu\n", apnVersion, profileVersion, vec.size());
     return ret;
 }
 

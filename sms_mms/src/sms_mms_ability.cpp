@@ -23,8 +23,8 @@
 #include "data_storage_errors.h"
 
 namespace OHOS {
-using AppExecFwk::AbilityLoader;
 using AppExecFwk::Ability;
+using AppExecFwk::AbilityLoader;
 namespace Telephony {
 std::map<std::string, MessageUriType> smsMmsUriMap = {
     {"/sms_mms/sms_mms_info", MessageUriType::SMS_MMS},
@@ -33,7 +33,7 @@ std::map<std::string, MessageUriType> smsMmsUriMap = {
     {"/sms_mms/sms_mms_info/unread_total", MessageUriType::UNREAD_TOTAL},
     {"/sms_mms/mms_protocol", MessageUriType::MMS_PROTOCOL},
     {"/sms_mms/sms_subsection", MessageUriType::SMS_SUBSECTION},
-    {"/sms_mms/mms_part", MessageUriType::MMS_PART}
+    {"/sms_mms/mms_part", MessageUriType::MMS_PART},
 };
 
 void SmsMmsAbility::OnStart(const AppExecFwk::Want &want)
@@ -59,28 +59,28 @@ int SmsMmsAbility::Insert(const Uri &uri, const NativeRdb::ValuesBucket &value)
     switch (messageUriType) {
         case MessageUriType::SMS_MMS: {
             helper_.Insert(id, value, TABLE_SMS_MMS_INFO);
-            DATA_STORAGE_LOGD("SmsMmsAbility::Insert SMS_MMS##id = %{public}lld\n", id);
+            DATA_STORAGE_LOGD("SmsMmsAbility::Insert SMS_MMS##id = %{public}" PRId64 "\n", id);
             break;
         }
         case MessageUriType::MMS_PROTOCOL: {
             helper_.Insert(id, value, TABLE_MMS_PROTOCOL);
-            DATA_STORAGE_LOGD("SmsMmsAbility::Insert MMS_PROTOCOL##id = %{public}lld\n", id);
+            DATA_STORAGE_LOGD("SmsMmsAbility::Insert MMS_PROTOCOL##id = %{public}" PRId64 "\n", id);
             break;
         }
         case MessageUriType::SMS_SUBSECTION: {
             helper_.Insert(id, value, TABLE_SMS_SUBSECTION);
-            DATA_STORAGE_LOGD("SmsMmsAbility::Insert SMS_SUBSECTION##id = %{public}lld\n", id);
+            DATA_STORAGE_LOGD("SmsMmsAbility::Insert SMS_SUBSECTION##id = %{public}" PRId64 "\n", id);
             break;
         }
         case MessageUriType::MMS_PART: {
             helper_.Insert(id, value, TABLE_MMS_PART);
-            DATA_STORAGE_LOGD("SmsMmsAbility::Insert MMS_PART##id = %{public}lld\n", id);
+            DATA_STORAGE_LOGD("SmsMmsAbility::Insert MMS_PART##id = %{public}" PRId64 "\n", id);
             break;
         }
         default:
             break;
     }
-    DATA_STORAGE_LOGD("SmsMmsAbility::Insert end##id = %{public}lld\n", id);
+    DATA_STORAGE_LOGD("SmsMmsAbility::Insert end##id = %{public}" PRId64 "\n", id);
     return id;
 }
 
@@ -165,8 +165,8 @@ int SmsMmsAbility::Update(
         PrintfAbsRdbPredicates(absRdbPredicates);
         result = helper_.Update(changedRows, value, *absRdbPredicates);
         free(absRdbPredicates);
-        DATA_STORAGE_LOGD("SmsMmsAbility::Update##result = %{public}d, changedRows = %{public}d\n", result,
-                          changedRows);
+        DATA_STORAGE_LOGD(
+            "SmsMmsAbility::Update##result = %{public}d, changedRows = %{public}d\n", result, changedRows);
     }
     DATA_STORAGE_LOGD("SmsMmsAbility::Update end##result = %{public}d\n", result);
     return result;
@@ -209,8 +209,8 @@ int SmsMmsAbility::Delete(const Uri &uri, const NativeRdb::DataAbilityPredicates
         PrintfAbsRdbPredicates(absRdbPredicates);
         int deletedRows;
         result = helper_.Delete(deletedRows, *absRdbPredicates);
-        DATA_STORAGE_LOGD("SmsMmsAbility::Delete##result = %{public}d, deletedRows = %{public}d\n", result,
-                          deletedRows);
+        DATA_STORAGE_LOGD(
+            "SmsMmsAbility::Delete##result = %{public}d, deletedRows = %{public}d\n", result, deletedRows);
         free(absRdbPredicates);
     }
     DATA_STORAGE_LOGD("SmsMmsAbility::Delete end##result = %{public}d\n", result);
@@ -243,7 +243,8 @@ int SmsMmsAbility::BatchInsert(const Uri &uri, const std::vector<NativeRdb::Valu
     switch (messageUriType) {
         case MessageUriType::SMS_MMS: {
             result = helper_.BatchInsertSmsMmsInfo(id, values);
-            DATA_STORAGE_LOGD("SmsMmsAbility::Insert ALL##BatchInsert = %{public}d, id = %{public}lld\n", result, id);
+            DATA_STORAGE_LOGD(
+                "SmsMmsAbility::Insert ALL##BatchInsert = %{public}d, id = %{public}" PRId64 "\n", result, id);
             break;
         }
         case MessageUriType::MMS_PROTOCOL: {
@@ -291,7 +292,7 @@ void SmsMmsAbility::PrintfAbsRdbPredicates(const NativeRdb::AbsRdbPredicates *pr
     int32_t size = whereArgs.size();
     for (int i = 0; i < size; ++i) {
         DATA_STORAGE_LOGD("SmsMmsAbility::PrintfAbsRdbPredicates##index = %{public}d, whereArgs = %{public}s\n", i,
-                          whereArgs[i].c_str());
+            whereArgs[i].c_str());
     }
     std::string order = predicates->GetOrder();
     DATA_STORAGE_LOGD("SmsMmsAbility::PrintfAbsRdbPredicates##order = %{public}s\n", order.c_str());
@@ -322,5 +323,5 @@ void SmsMmsAbility::DataAbilityPredicatesConvertAbsRdbPredicates(
 }
 
 REGISTER_AA(SmsMmsAbility);
-}  // namespace AppExecFwk
-}  // namespace OHOS
+} // namespace Telephony
+} // namespace OHOS
