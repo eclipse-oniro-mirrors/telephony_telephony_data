@@ -1,0 +1,11 @@
+{
+    "subsystem": "telephony",
+    "parts": {
+        "data_storage": {
+            "module_list": [
+                "//base/telephony/data_storage:tel_data_storage"
+            ]
+        }
+    }
+}
+
