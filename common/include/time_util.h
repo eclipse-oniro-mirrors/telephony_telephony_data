@@ -80,11 +80,7 @@ void GetTimeOfThirty(std::string &date)
     int64_t THIRTY_DAYS = 2592000;
     time_t *DEFAULT_TIMER = 0;
     time_t now = time(DEFAULT_TIMER) - THIRTY_DAYS;
-    tm *ltm = localtime(&now);
-    if (ltm == nullptr) {
-        return;
-    }
-    FormatDate(date, ltm);
+    date = std::to_string(now);
 }
 } // namespace Telephony
 } // namespace OHOS

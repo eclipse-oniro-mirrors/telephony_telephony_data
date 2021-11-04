@@ -37,15 +37,12 @@ public:
     static constexpr const char *IS_COLLECT = "is_collect";
     static constexpr const char *SESSION_TYPE = "session_type";
     static constexpr const char *RETRY_NUMBER = "retry_number";
-    static constexpr const char *ATTACHMENT_TYPE = "attachment_type";
-    static constexpr const char *ATTACHMENT_PATH = "attachment_path";
-    static constexpr const char *ATTACHMENT_FAILURE_TIME = "attachment_failure_time";
     static constexpr const char *OPERATOR_SERVICE_NUMBER = "operator_service_number";
     static constexpr const char *SESSION_ID = "session_id";
     static constexpr const char *GROUP_ID = "group_id";
-    static constexpr const char *MMS_PROTOCOL_ID = "mms_protocol_id";
     static constexpr const char *DEVICE_ID = "device_id";
     static constexpr const char *IS_SUBSECTION = "is_subsection";
+    static constexpr const char *IS_SEND_REPORT = "is_send_report";
 };
 
 class SmsSubsection {
@@ -67,7 +64,6 @@ public:
 class MmsProtocol {
 public:
     static constexpr const char *ID = "id";
-    static constexpr const char *MMS_PROTOCOL_ID = "mms_protocol_id";
     static constexpr const char *BCC = "bcc";
     static constexpr const char *CC = "cc";
     static constexpr const char *CONTENT_LOCATION = "content_location";
@@ -91,7 +87,7 @@ public:
 class MmsPart {
 public:
     static constexpr const char *ID = "id";
-    static constexpr const char *MSG_ID = "msg_id";
+    static constexpr const char *INDEX = "indexs";
     static constexpr const char *TYPE = "type";
     static constexpr const char *LOCATION_PATH = "location_path";
     static constexpr const char *STATE = "state";

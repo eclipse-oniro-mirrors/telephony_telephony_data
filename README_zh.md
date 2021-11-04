@@ -66,70 +66,22 @@
 
 <a name="table165976561598"></a>
 
-<table><thead align="left"><tr id="row1059785615915"><th class="cellrowborder" valign="top" width="50.019999999999996%" id="mcps1.2.3.1.1"><p id="p81665114103"><a name="p81665114103"></a><a name="p81665114103"></a>接口定义</p>
-</th>
-<th class="cellrowborder" valign="top" width="49.980000000000004%" id="mcps1.2.3.1.2"><p id="p916145121017"><a name="p916145121017"></a><a name="p916145121017"></a><strong id="b15161551111018"><a name="b15161551111018"></a><a name="b15161551111018"></a>接口描述</strong></p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row137081297171"><td class="cellrowborder" valign="top" width="50.019999999999996%" headers="mcps1.2.3.1.1 "><p id="p570813931718"><a name="p570813931718"></a><a name="p570813931718"></a>int Insert(const Uri &uri, const NativeRdb::ValuesBucket &value)</p>
-</td>
-<td class="cellrowborder" valign="top" width="49.980000000000004%" headers="mcps1.2.3.1.2 "><p id="p770811916175"><a name="p770811916175"></a><a name="p770811916175"></a>插入数据</p>
-</td>
-</tr>
-<tr id="row176541675174"><td class="cellrowborder" valign="top" width="50.019999999999996%" headers="mcps1.2.3.1.1 "><p id="p06544714174"><a name="p06544714174"></a><a name="p06544714174"></a>int Delete(const Uri &uri, const NativeRdb::DataAbilityPredicates &predicates)</p>
-</td>
-<td class="cellrowborder" valign="top" width="49.980000000000004%" headers="mcps1.2.3.1.2 "><p id="p26546716175"><a name="p26546716175"></a><a name="p26546716175"></a>删除数据</p>
-</td>
-</tr>
-<tr id="row1526612541718"><td class="cellrowborder" valign="top" width="50.019999999999996%" headers="mcps1.2.3.1.1 "><p id="p62673520171"><a name="p62673520171"></a><a name="p62673520171"></a>int Update(
-    const Uri &uri, const NativeRdb::ValuesBucket &value, const NativeRdb::DataAbilityPredicates &predicates)</p>
-</td>
-<td class="cellrowborder" valign="top" width="49.980000000000004%" headers="mcps1.2.3.1.2 "><p id="p152671855177"><a name="p152671855177"></a><a name="p152671855177"></a>更新数据</p>
-</td>
-</tr>
-<tr id="row1526612541719"><td class="cellrowborder" valign="top" width="50.019999999999996%" headers="mcps1.2.3.1.1 "><p id="p62673520171"><a name="p62673520171"></a><a name="p62673520171"></a>std::shared_ptr&lt;NativeRdb::AbsSharedResultSet&gt; Query(
-    const Uri &uri, const std::vector&lt;std::string&gt; &columns, const NativeRdb::DataAbilityPredicates &predicates)</p>
-</td>
-<td class="cellrowborder" valign="top" width="49.980000000000004%" headers="mcps1.2.3.1.2 "><p id="p152671855177"><a name="p152671855177"></a><a name="p152671855177"></a>查询数据</p>
-</td>
-</tr>
-</tbody>
-</table>
-
-
-
-
-
-### 权限说明<a name="section137mcpsimp"></a>
+| 接口定义                                                     | **接口描述** |
+| ------------------------------------------------------------ | ------------ |
+| int Insert(const Uri &uri, const NativeRdb::ValuesBucket &value) | 插入数据     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|
+| int Delete(const Uri &uri, const NativeRdb::DataAbilityPredicates &predicates) | 删除数据     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|
+| int Update( const Uri &uri, const NativeRdb::ValuesBucket &value, const NativeRdb::DataAbilityPredicates &predicates) | 更新数据     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|
+| std::shared_ptr\<NativeRdb::AbsSharedResultSet\> Query( const Uri &uri, const std::vector\<std::string\> &columns, const NativeRdb::DataAbilityPredicates &predicates) | 查询数据     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|
 
 **表 2**  权限说明
 
 <a name="table165976561598"></a>
 
-<table><thead align="left"><tr id="row1059785615915"><th class="cellrowborder" valign="top" width="50.019999999999996%" id="mcps1.2.3.1.1"><p id="p81665114103"><a name="p81665114103"></a><a name="p81665114103"></a>模块</p>
-</th>
-<th class="cellrowborder" valign="top" width="49.980000000000004%" id="mcps1.2.3.1.2"><p id="p916145121017"><a name="p916145121017"></a><a name="p916145121017"></a><strong id="b15161551111018"><a name="b15161551111018"></a><a name="b15161551111018"></a>所需权限</strong></p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row137081297171"><td class="cellrowborder" valign="top" width="50.019999999999996%" headers="mcps1.2.3.1.1 "><p id="p570813931718"><a name="p570813931718"></a><a name="p570813931718"></a>短彩信模块</p>
-</td>
-<td class="cellrowborder" valign="top" width="49.980000000000004%" headers="mcps1.2.3.1.2 "><p id="p770811916175"><a name="p770811916175"></a><a name="p770811916175"></a>com.ohos.smsmmsability.DataAbilityShellProvider.PROVIDER</p>
-</td>
-</tr>
-<tr id="row176541675174"><td class="cellrowborder" valign="top" width="50.019999999999996%" headers="mcps1.2.3.1.1 "><p id="p06544714174"><a name="p06544714174"></a><a name="p06544714174"></a>SIM卡模块</p>
-</td>
-<td class="cellrowborder" valign="top" width="49.980000000000004%" headers="mcps1.2.3.1.2 "><p id="p26546716175"><a name="p26546716175"></a><a name="p26546716175"></a>com.ohos.simability.DataAbilityShellProvider.PROVIDER</p>
-</td>
-</tr>
-<tr id="row176541675174"><td class="cellrowborder" valign="top" width="50.019999999999996%" headers="mcps1.2.3.1.1 "><p id="p06544714174"><a name="p06544714174"></a><a name="p06544714174"></a>网络运营商模块</p>
-</td>
-<td class="cellrowborder" valign="top" width="49.980000000000004%" headers="mcps1.2.3.1.2 "><p id="p26546716175"><a name="p26546716175"></a><a name="p26546716175"></a>com.ohos.pdpprofileability.DataAbilityShellProvider.PROVIDER</p>
-</td>
-</tr>
-</tbody>
-</table>
+| 模块           | **所需权限**                                                 |
+| -------------- | ------------------------------------------------------------ |
+| 短彩信模块     | com.ohos.smsmmsability.DataAbilityShellProvider.PROVIDER     |
+| SIM卡模块      | com.ohos.simability.DataAbilityShellProvider.PROVIDER        |
+| 网络运营商模块 | com.ohos.pdpprofileability.DataAbilityShellProvider.PROVIDER |
 
 ## 使用说明<a name="section163mcpsimp"></a>
 
@@ -139,25 +91,10 @@
 
 <a name="table1234838197"></a>
 
-<table><thead align="left"><tr id="row1059785615915"><th class="cellrowborder" valign="top" width="50.019999999999996%" id="mcps1.2.3.1.1"><p id="p81665114103"><a name="p81665114103"></a><a name="p81665114103"></a>参数</p>
-</th>
-<th class="cellrowborder" valign="top" width="49.980000000000004%" id="mcps1.2.3.1.2"><p id="p916145121017"><a name="p916145121017"></a><a name="p916145121017"></a><strong id="b15161551111018"><a name="b15161551111018"></a><a name="b15161551111018"></a>说明</strong></p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row137081297171"><td class="cellrowborder" valign="top" width="50.019999999999996%" headers="mcps1.2.3.1.1 "><p id="p570813931718"><a name="p570813931718"></a><a name="p570813931718"></a>uri</p>
-</td>
-<td class="cellrowborder" valign="top" width="49.980000000000004%" headers="mcps1.2.3.1.2 "><p id="p770811916175"><a name="p770811916175"></a><a name="p770811916175"></a>资源路径</p>
-</td>
-</tr>
-<tr id="row176541675174"><td class="cellrowborder" valign="top" width="50.019999999999996%" headers="mcps1.2.3.1.1 "><p id="p06544714174"><a name="p06544714174"></a><a name="p06544714174"></a>value</p>
-</td>
-<td class="cellrowborder" valign="top" width="49.980000000000004%" headers="mcps1.2.3.1.2 "><p id="p26546716175"><a name="p26546716175"></a><a name="p26546716175"></a>数据集合,字段对应当前操作的表结构字段</p>
-</td>
-</tr>
-</tbody>
-</table>
-
+| 参数  | **说明**                              |
+| ----- | ------------------------------------- |
+| uri   | 资源路径                              |
+| value | 数据集合,字段对应当前操作的表结构字段 |
 
 ### 删除接口参数说明<a name="section1098113151208"></a>
 
@@ -165,30 +102,11 @@
 
 <a name="table1234838197"></a>
 
-<table><thead align="left"><tr id="row82351335191"><th class="cellrowborder" valign="top" width="50.019999999999996%" id="mcps1.2.4.1.1"><p id="p2023519312196"><a name="p2023519312196"></a><a name="p2023519312196"></a>参数</p>
-</th>
-<th class="cellrowborder" valign="top" width="49.980000000000004%" id="mcps1.2.4.1.2"><p id="p1823516361916"><a name="p1823516361916"></a><a name="p1823516361916"></a>说明</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row122350371913"><td class="cellrowborder" valign="top" width="50.019999999999996%" headers="mcps1.2.4.1.1 "><p id="p22351321915"><a name="p22351321915"></a><a name="p22351321915"></a>uri</p>
-</td>
-<td class="cellrowborder" valign="top" width="49.980000000000004%" headers="mcps1.2.4.1.2 "><p id="p142353317193"><a name="p142353317193"></a><a name="p142353317193"></a>资源路径</p>
-</td>
-</tr>
- <tr id="row9235183101918"><td class="cellrowborder" valign="top" width="50.019999999999996%" headers="mcps1.2.4.1.1 "><p id="p1523593201916"><a name="p1523593201916"></a><a name="p1523593201916"></a>value</p>
-</td>
-<td class="cellrowborder" valign="top" width="49.980000000000004%" headers="mcps1.2.4.1.2 "><p id="p1123553161910"><a name="p1123553161910"></a><a name="p1123553161910"></a>数据集合,字段对应当前操作的表结构字段</p>
-</td>
-</tr>
-<tr id="row9235183101918"><td class="cellrowborder" valign="top" width="50.019999999999996%" headers="mcps1.2.4.1.1 "><p id="p1523593201916"><a name="p1523593201916"></a><a name="p1523593201916"></a>predicates</p>
-</td>
-<td class="cellrowborder" valign="top" width="49.980000000000004%" headers="mcps1.2.4.1.2 "><p id="p1123553161910"><a name="p1123553161910"></a><a name="p1123553161910"></a>删除条件</p>
-</td>
-</tr>
-</tbody>
-</table>
-
+| 参数       | 说明                                  |
+| ---------- | ------------------------------------- |
+| uri        | 资源路径                              |
+| value      | 数据集合,字段对应当前操作的表结构字段 |
+| predicates | 删除条件                              |
 
 ### 更新接口参数说明<a name="section1097113151210"></a>
 
@@ -196,24 +114,10 @@
 
 <a name="table1234838197"></a>
 
-<table><thead align="left"><tr id="row82351335191"><th class="cellrowborder" valign="top" width="50.019999999999996%" id="mcps1.2.4.1.1"><p id="p2023519312196"><a name="p2023519312196"></a><a name="p2023519312196"></a>参数</p>
-</th>
-<th class="cellrowborder" valign="top" width="49.980000000000004%" id="mcps1.2.4.1.2"><p id="p1823516361916"><a name="p1823516361916"></a><a name="p1823516361916"></a>说明</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row122350371913"><td class="cellrowborder" valign="top" width="50.019999999999996%" headers="mcps1.2.4.1.1 "><p id="p22351321915"><a name="p22351321915"></a><a name="p22351321915"></a>uri</p>
-</td>
-<td class="cellrowborder" valign="top" width="49.980000000000004%" headers="mcps1.2.4.1.2 "><p id="p142353317193"><a name="p142353317193"></a><a name="p142353317193"></a>资源路径</p>
-</td>
-</tr>
-<tr id="row9235183101918"><td class="cellrowborder" valign="top" width="50.019999999999996%" headers="mcps1.2.4.1.1 "><p id="p1523593201916"><a name="p1523593201916"></a><a name="p1523593201916"></a>predicates</p>
-</td>
-<td class="cellrowborder" valign="top" width="49.980000000000004%" headers="mcps1.2.4.1.2 "><p id="p1123553161910"><a name="p1123553161910"></a><a name="p1123553161910"></a>更新条件</p>
-</td>
-</tr>
-</tbody>
-</table>
+| 参数       | 说明     |
+| ---------- | -------- |
+| uri        | 资源路径 |
+| predicates | 更新条件 |
 
 ### 查询接口参数说明<a name="section1096113151208"></a>
 
@@ -221,30 +125,11 @@
 
 <a name="table1234838197"></a>
 
-<table><thead align="left"><tr id="row82351335191"><th class="cellrowborder" valign="top" width="50.019999999999996%" id="mcps1.2.4.1.1"><p id="p2023519312196"><a name="p2023519312196"></a><a name="p2023519312196"></a>参数</p>
-</th>
-<th class="cellrowborder" valign="top" width="49.980000000000004%" id="mcps1.2.4.1.2"><p id="p1823516361916"><a name="p1823516361916"></a><a name="p1823516361916"></a>说明</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row122350371913"><td class="cellrowborder" valign="top" width="50.019999999999996%" headers="mcps1.2.4.1.1 "><p id="p22351321915"><a name="p22351321915"></a><a name="p22351321915"></a>uri</p>
-</td>
-<td class="cellrowborder" valign="top" width="49.980000000000004%" headers="mcps1.2.4.1.2 "><p id="p142353317193"><a name="p142353317193"></a><a name="p142353317193"></a>资源路径</p>
-</td>
-</tr>
- <tr id="row9235183101918"><td class="cellrowborder" valign="top" width="50.019999999999996%" headers="mcps1.2.4.1.1 "><p id="p1523593201916"><a name="p1523593201916"></a><a name="p1523593201916"></a>columns</p>
-</td>
-<td class="cellrowborder" valign="top" width="49.980000000000004%" headers="mcps1.2.4.1.2 "><p id="p1123553161910"><a name="p1123553161910"></a><a name="p1123553161910"></a>查询返回的字段</p>
-</td>
-</tr>
-<tr id="row9235183101918"><td class="cellrowborder" valign="top" width="50.019999999999996%" headers="mcps1.2.4.1.1 "><p id="p1523593201916"><a name="p1523593201916"></a><a name="p1523593201916"></a>predicates</p>
-</td>
-<td class="cellrowborder" valign="top" width="49.980000000000004%" headers="mcps1.2.4.1.2 "><p id="p1123553161910"><a name="p1123553161910"></a><a name="p1123553161910"></a>查询条件</p>
-</td>
-</tr>
-</tbody>
-</table>
-
+| 参数       | 说明           |
+| ---------- | -------------- |
+| uri        | 资源路径       |
+| columns    | 查询返回的字段 |
+| predicates | 查询条件       |
 
 ### 接口调用代码示例<a name="section1558565082915"></a>
 
