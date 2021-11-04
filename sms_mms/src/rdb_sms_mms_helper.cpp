@@ -62,16 +62,13 @@ void RdbSmsMmsHelper::CreateSmsMmsInfoTableStr(std::string &createTableStr)
     createTableStr.append(SmsMmsInfo::IS_LOCK).append(" INTEGER DEFAULT 0, ");
     createTableStr.append(SmsMmsInfo::IS_COLLECT).append(" INTEGER DEFAULT 0, ");
     createTableStr.append(SmsMmsInfo::IS_READ).append(" INTEGER DEFAULT 0, ");
-    createTableStr.append(SmsMmsInfo::SESSION_TYPE).append(" INTEGER DEFAULT 0, ");
+    createTableStr.append(SmsMmsInfo::SESSION_TYPE).append(" INTEGER DEFAULT 3, ");
     createTableStr.append(SmsMmsInfo::RETRY_NUMBER).append(" INTEGER DEFAULT 0, ");
-    createTableStr.append(SmsMmsInfo::ATTACHMENT_TYPE).append(" INTEGER DEFAULT 0, ");
-    createTableStr.append(SmsMmsInfo::ATTACHMENT_PATH).append(" TEXT DEFAULT '', ");
-    createTableStr.append(SmsMmsInfo::ATTACHMENT_FAILURE_TIME).append(" TEXT DEFAULT '', ");
-    createTableStr.append(SmsMmsInfo::SESSION_ID).append(" INTEGER , ");
+    createTableStr.append(SmsMmsInfo::SESSION_ID).append(" INTEGER DEFAULT -1, ");
     createTableStr.append(SmsMmsInfo::GROUP_ID).append(" INTEGER DEFAULT -1, ");
     createTableStr.append(SmsMmsInfo::DEVICE_ID).append(" INTEGER , ");
-    createTableStr.append(SmsMmsInfo::MMS_PROTOCOL_ID).append(" INTEGER , ");
     createTableStr.append(SmsMmsInfo::IS_SUBSECTION).append(" INTEGER DEFAULT 0, ");
+    createTableStr.append(SmsMmsInfo::IS_SEND_REPORT).append(" INTEGER DEFAULT 0, ");
     createTableStr.append(SmsMmsInfo::MSG_CODE).append(" INTEGER DEFAULT 0)");
 }
 
@@ -79,7 +76,7 @@ void RdbSmsMmsHelper::CreateMmsProtocolTableStr(std::string &createTableStr)
 {
     createTableStr.append("CREATE TABLE IF NOT EXISTS ").append(TABLE_MMS_PROTOCOL);
     createTableStr.append("(").append(MmsProtocol::ID).append(" INTEGER PRIMARY KEY AUTOINCREMENT, ");
-    createTableStr.append(MmsProtocol::MMS_PROTOCOL_ID).append(" INTEGER NOT NULL, ");
+    createTableStr.append(SmsMmsInfo::MSG_ID).append(" INTEGER NOT NULL, ");
     createTableStr.append(MmsProtocol::BCC).append(" TEXT DEFAULT '', ");
     createTableStr.append(MmsProtocol::CC).append(" TEXT DEFAULT '', ");
     createTableStr.append(MmsProtocol::CONTENT_LOCATION).append(" TEXT DEFAULT '', ");
@@ -97,7 +94,10 @@ void RdbSmsMmsHelper::CreateMmsProtocolTableStr(std::string &createTableStr)
     createTableStr.append(MmsProtocol::REPORT_ALLOWED).append(" INTEGER , ");
     createTableStr.append(MmsProtocol::RESPONSE_STATUS).append(" INTEGER DEFAULT 0, ");
     createTableStr.append(MmsProtocol::RESPONSE_TEXT).append(" TEXT DEFAULT '', ");
-    createTableStr.append(MmsProtocol::SENDER_VISIBILITY).append(" INTEGER DEFAULT 0)");
+    createTableStr.append(MmsProtocol::SENDER_VISIBILITY).append(" INTEGER DEFAULT 0,");
+    createTableStr.append("foreign key(").append(SmsMmsInfo::MSG_ID).append(") references ");
+    createTableStr.append(TABLE_SMS_MMS_INFO).append("(").append(SmsMmsInfo::MSG_ID);
+    createTableStr.append(") on delete cascade on update cascade )");
 }
 
 void RdbSmsMmsHelper::CreateSmsSubsectionTableStr(std::string &createTableStr)
@@ -121,11 +121,15 @@ void RdbSmsMmsHelper::CreateMmsPartTableStr(std::string &createTableStr)
 {
     createTableStr.append("CREATE TABLE IF NOT EXISTS ").append(TABLE_MMS_PART);
     createTableStr.append("(").append(MmsPart::ID).append(" INTEGER PRIMARY KEY AUTOINCREMENT, ");
-    createTableStr.append(MmsPart::MSG_ID).append(" INTEGER NOT NULL, ");
+    createTableStr.append(SmsMmsInfo::MSG_ID).append(" INTEGER NOT NULL, ");
+    createTableStr.append(MmsPart::INDEX).append(" INTEGER , ");
     createTableStr.append(MmsPart::TYPE).append(" INTEGER , ");
     createTableStr.append(MmsPart::LOCATION_PATH).append(" TEXT DEFAULT '', ");
-    createTableStr.append(MmsPart::ENCODE).append(" INTEGER DEFAULT 0, ");
-    createTableStr.append(MmsPart::STATE).append(" INTEGER DEFAULT 0)");
+    createTableStr.append(MmsPart::ENCODE).append(" INTEGER , ");
+    createTableStr.append(MmsPart::STATE).append(" INTEGER , ");
+    createTableStr.append("foreign key(").append(SmsMmsInfo::MSG_ID).append(") references ");
+    createTableStr.append(TABLE_SMS_MMS_INFO).append("(").append(SmsMmsInfo::MSG_ID);
+    createTableStr.append(") on delete cascade on update cascade )");
 }
 
 void RdbSmsMmsHelper::UpdateDbPath(const std::string &path)

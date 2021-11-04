@@ -65,8 +65,7 @@ int ParserUtil::ParserPdpProfileJson(std::vector<PdpProfile> &vec)
     if (ret == NativePreferences::E_OK) {
         utils->Refresh();
     }
-    DATA_STORAGE_LOGD("ParserUtil::ParserPdpProfileJson##apnVersion = %{public}d, profileVersion  = %{public}d, "
-                      "vec.size = %{public}zu\n", apnVersion, profileVersion, vec.size());
+    DATA_STORAGE_LOGD("ParserUtil::ParserPdpProfileJson##apnVersion = %{public}d\n", apnVersion);
     return ret;
 }
 
@@ -130,7 +129,7 @@ int ParserUtil::LoaderJsonFile(char *&content)
         return OPEN_FILE_ERROR;
     }
     len++;
-    if (len <= 0 || len > INT_MAX) {
+    if (len <= 0 || len > LONG_MAX) {
         return OPEN_FILE_ERROR;
     }
     content = (char *)malloc(len);

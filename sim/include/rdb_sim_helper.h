@@ -36,6 +36,7 @@ public:
 private:
     void CreateSimInfoTableStr(std::string &createTableStr);
     int32_t UpdateCardStateByType(int32_t type, int32_t updateState, int32_t whereSate);
+    void EndTransactionAction();
 
 private:
     const std::string DB_NAME = "sim.db";

@@ -74,7 +74,7 @@ int DataStorageGtest::SimInsert(const std::shared_ptr<AppExecFwk::DataAbilityHel
     NativeRdb::ValuesBucket value;
     value.PutInt(SimData::SIM_ID, 1);
     value.PutInt(SimData::SLOT_INDEX, 1);
-    value.PutString(SimData::PHONE_NUMBER, "1111111111111");
+    value.PutString(SimData::PHONE_NUMBER, "134xxxxxxxx");
     return helper->Insert(uri, value);
 }
 
@@ -83,7 +83,7 @@ int DataStorageGtest::SimUpdate(const std::shared_ptr<AppExecFwk::DataAbilityHel
     Uri uri("dataability:///com.ohos.simability/sim/sim_info");
     std::string slot = std::to_string(1);
     NativeRdb::ValuesBucket values;
-    values.PutString(SimData::SHOW_NAME, "test");
+    values.PutString(SimData::SHOW_NAME, "China Mobile");
     NativeRdb::DataAbilityPredicates predicates;
     predicates.EqualTo(SimData::SLOT_INDEX, slot);
     return helper->Update(uri, values, predicates);
@@ -115,8 +115,8 @@ int DataStorageGtest::SmsInsert(const std::shared_ptr<AppExecFwk::DataAbilityHel
 {
     Uri uri("dataability:///com.ohos.smsmmsability/sms_mms/sms_mms_info");
     NativeRdb::ValuesBucket value;
-    value.PutString(SmsMmsInfo::RECEIVER_NUMBER, "11111111111");
-    value.PutString(SmsMmsInfo::MSG_CONTENT, "test");
+    value.PutString(SmsMmsInfo::RECEIVER_NUMBER, "134xxxxxxxx");
+    value.PutString(SmsMmsInfo::MSG_CONTENT, "The first test text message content");
     value.PutInt(SmsMmsInfo::GROUP_ID, 1);
     return helper->Insert(uri, value);
 }
@@ -125,7 +125,7 @@ int DataStorageGtest::SmsUpdate(const std::shared_ptr<AppExecFwk::DataAbilityHel
 {
     Uri uri("dataability:///com.ohos.smsmmsability/sms_mms/sms_mms_info");
     NativeRdb::ValuesBucket values;
-    values.PutString(SmsMmsInfo::MSG_CONTENT, "test");
+    values.PutString(SmsMmsInfo::MSG_CONTENT, "The second test text message content");
     NativeRdb::DataAbilityPredicates predicates;
     predicates.EqualTo(SmsMmsInfo::MSG_ID, "1");
     return helper->Update(uri, values, predicates);

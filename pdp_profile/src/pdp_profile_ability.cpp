@@ -104,6 +104,10 @@ int PdpProfileAbility::Update(
             absRdbPredicates = new NativeRdb::AbsRdbPredicates(TABLE_PDP_PROFILE);
             break;
         }
+        case PdpProfileUriType::RESET: {
+            helper_.ResetApn();
+            break;
+        }
         default:
             break;
     }
@@ -113,8 +117,8 @@ int PdpProfileAbility::Update(
         PrintfAbsRdbPredicates(absRdbPredicates);
         result = helper_.Update(changedRows, value, *absRdbPredicates);
         free(absRdbPredicates);
-        DATA_STORAGE_LOGD("PdpProfileAbility::Update##result = %{public}d, changedRows = %{public}d\n", result,
-                          changedRows);
+        DATA_STORAGE_LOGD("PdpProfileAbility::Update##result = %{public}d, changedRows = %{public}d\n",
+            result, changedRows);
     }
     DATA_STORAGE_LOGD("PdpProfileAbility::Update end##result = %{public}d\n", result);
     return result;
@@ -141,8 +145,8 @@ int PdpProfileAbility::Delete(const Uri &uri, const NativeRdb::DataAbilityPredic
         PrintfAbsRdbPredicates(absRdbPredicates);
         int deletedRows;
         result = helper_.Delete(deletedRows, *absRdbPredicates);
-        DATA_STORAGE_LOGD("PdpProfileAbility::Delete##result = %{public}d, deletedRows = %{public}d\n", result,
-                          deletedRows);
+        DATA_STORAGE_LOGD("PdpProfileAbility::Delete##result = %{public}d, deletedRows = %{public}d\n",
+            result, deletedRows);
         free(absRdbPredicates);
     }
     DATA_STORAGE_LOGD("PdpProfileAbility::Delete end##result = %{public}d\n", result);
@@ -179,7 +183,7 @@ PdpProfileUriType PdpProfileAbility::ParseUriType(Uri &uri)
             if (it != pdpProfileUriMap.end()) {
                 pdpProfileUriType = it->second;
                 DATA_STORAGE_LOGD("PdpProfileAbility::ParseUriType##pdpProfileUriType = %{public}d\n",
-                                  pdpProfileUriType);
+                    pdpProfileUriType);
             }
         }
     }

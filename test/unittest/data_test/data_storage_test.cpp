@@ -1,17 +1,18 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+* Copyright (C) 2021 Huawei Device Co., Ltd.
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+
 #include <iostream>
 #include <vector>
 #include "iservice_registry.h"
@@ -27,9 +28,9 @@
 
 namespace OHOS {
 namespace Telephony {
-using NetdTestFunc = void (*)();
-std::map<int32_t, NetdTestFunc> g_memberFuncMap;
-
+using CmdProcessFunc = int (*)(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper);
+std::map<char, CmdProcessFunc> g_simFuncMap;
+std::map<char, CmdProcessFunc> g_smsFuncMap;
 std::shared_ptr<AppExecFwk::DataAbilityHelper> CreateDataAHelper(int32_t systemAbilityId)
 {
     DATA_STORAGE_LOGD("DataSimRdbHelper::CreateDataAHelper");
@@ -62,17 +63,8 @@ int SimInsert(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
     NativeRdb::ValuesBucket value;
     value.PutInt(SimData::SIM_ID, 1);
     value.PutInt(SimData::SLOT_INDEX, 1);
-    value.PutString(SimData::PHONE_NUMBER, "1111111111111");
+    value.PutString(SimData::PHONE_NUMBER, "134xxxxxxxx");
     return helper->Insert(uri, value);
-}
-
-void SimInsertFun()
-{
-    std::shared_ptr<AppExecFwk::DataAbilityHelper> helper = nullptr;
-    helper = CreateSimHelper();
-    if (helper != nullptr) {
-        SimInsert(helper);
-    }
 }
 
 int SimUpdate(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
@@ -80,19 +72,10 @@ int SimUpdate(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
     Uri uri("dataability:///com.ohos.simability/sim/sim_info");
     std::string slot = std::to_string(1);
     NativeRdb::ValuesBucket values;
-    values.PutString(SimData::SHOW_NAME, "test");
+    values.PutString(SimData::SHOW_NAME, "China Mobile");
     NativeRdb::DataAbilityPredicates predicates;
     predicates.EqualTo(SimData::SLOT_INDEX, slot);
     return helper->Update(uri, values, predicates);
-}
-
-void SimUpdateFun()
-{
-    std::shared_ptr<AppExecFwk::DataAbilityHelper> helper = nullptr;
-    helper = CreateSimHelper();
-    if (helper != nullptr) {
-        SimUpdate(helper);
-    }
 }
 
 int SimSelect(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
@@ -109,15 +92,6 @@ int SimSelect(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
     return -1;
 }
 
-void SimSelectFun()
-{
-    std::shared_ptr<AppExecFwk::DataAbilityHelper> helper = nullptr;
-    helper = CreateSimHelper();
-    if (helper != nullptr) {
-        SimSelect(helper);
-    }
-}
-
 int SimDelete(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
 {
     Uri uri("dataability:///com.ohos.simability/sim/sim_info");
@@ -126,51 +100,24 @@ int SimDelete(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
     return helper->Delete(uri, predicates);
 }
 
-void SimDeleteFun()
-{
-    std::shared_ptr<AppExecFwk::DataAbilityHelper> helper = nullptr;
-    helper = CreateSimHelper();
-    if (helper != nullptr) {
-        SimDelete(helper);
-    }
-}
-
 int SmsInsert(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
 {
     Uri uri("dataability:///com.ohos.smsmmsability/sms_mms/sms_mms_info");
     NativeRdb::ValuesBucket value;
-    value.PutString(SmsMmsInfo::RECEIVER_NUMBER, "11111111111");
-    value.PutString(SmsMmsInfo::MSG_CONTENT, "test");
+    value.PutString(SmsMmsInfo::RECEIVER_NUMBER, "134xxxxxxxx");
+    value.PutString(SmsMmsInfo::MSG_CONTENT, "The first test text message content");
     value.PutInt(SmsMmsInfo::GROUP_ID, 1);
     return helper->Insert(uri, value);
-}
-
-void SmsInsertFun()
-{
-    std::shared_ptr<AppExecFwk::DataAbilityHelper> helper = nullptr;
-    helper = CreateSmsHelper();
-    if (helper != nullptr) {
-        SmsInsert(helper);
-    }
 }
 
 int SmsUpdate(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
 {
     Uri uri("dataability:///com.ohos.smsmmsability/sms_mms/sms_mms_info");
     NativeRdb::ValuesBucket values;
-    values.PutString(SmsMmsInfo::MSG_CONTENT, "test");
+    values.PutString(SmsMmsInfo::MSG_CONTENT, "The second test text message content");
     NativeRdb::DataAbilityPredicates predicates;
     predicates.EqualTo(SmsMmsInfo::MSG_ID, "1");
     return helper->Update(uri, values, predicates);
-}
-
-void SmsUpdateFun()
-{
-    std::shared_ptr<AppExecFwk::DataAbilityHelper> helper = nullptr;
-    helper = CreateSmsHelper();
-    if (helper != nullptr) {
-        SmsUpdate(helper);
-    }
 }
 
 int SmsSelect(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
@@ -187,30 +134,12 @@ int SmsSelect(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
     return -1;
 }
 
-void SmsSelectFun()
-{
-    std::shared_ptr<AppExecFwk::DataAbilityHelper> helper = nullptr;
-    helper = CreateSmsHelper();
-    if (helper != nullptr) {
-        SmsSelect(helper);
-    }
-}
-
 int SmsDelete(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
 {
     Uri uri("dataability:///com.ohos.smsmmsability/sms_mms/sms_mms_info");
     NativeRdb::DataAbilityPredicates predicates;
     predicates.EqualTo(SmsMmsInfo::MSG_ID, "1");
     return helper->Delete(uri, predicates);
-}
-
-void SmsDeleteFun()
-{
-    std::shared_ptr<AppExecFwk::DataAbilityHelper> helper = nullptr;
-    helper = CreateSmsHelper();
-    if (helper != nullptr) {
-        SmsDelete(helper);
-    }
 }
 
 int PdpSelect(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
@@ -227,26 +156,40 @@ int PdpSelect(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
     return -1;
 }
 
-void PdpSelectFun()
+void Init()
 {
-    std::shared_ptr<AppExecFwk::DataAbilityHelper> helper = nullptr;
-    helper = CreateSmsHelper();
-    if (helper != nullptr) {
-        PdpSelect(helper);
-    }
+    g_simFuncMap['q'] = SimInsert;
+    g_simFuncMap['w'] = SimUpdate;
+    g_simFuncMap['e'] = SimSelect;
+    g_simFuncMap['r'] = SimDelete;
+    g_smsFuncMap['t'] = SmsInsert;
+    g_smsFuncMap['y'] = SmsUpdate;
+    g_smsFuncMap['u'] = SmsSelect;
+    g_smsFuncMap['i'] = SmsDelete;
+    g_smsFuncMap['o'] = PdpSelect;
 }
 
-int32_t GetInputData()
+int VerifyCmd(char inputCMD, std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper)
 {
-    int32_t input;
-    std::cin >> input;
-    while (std::cin.fail()) {
-        std::cin.clear();
-        std::cin.ignore();
-        printf("Input error, please input number again\n");
-        std::cin >> input;
+    auto itFunSim = g_simFuncMap.find(inputCMD);
+    if (itFunSim != g_simFuncMap.end()) {
+        auto memberFunc = itFunSim->second;
+        if (memberFunc != nullptr) {
+            helper = CreateSimHelper();
+            (*memberFunc)(helper);
+            return 0;
+        }
     }
-    return input;
+    auto itFunSms = g_smsFuncMap.find(inputCMD);
+    if (itFunSms != g_smsFuncMap.end()) {
+        auto memberFunc = itFunSms->second;
+        if (memberFunc != nullptr) {
+            helper = CreateSmsHelper();
+            (*memberFunc)(helper);
+            return 0;
+        }
+    }
+    return -1;
 }
 
 void PrintfHint()
@@ -268,51 +211,35 @@ void PrintfHint()
         "your choice: ");
 }
 
-void ProcessInput(bool &loopFlag)
-{
-    int32_t inputCMD = GetInputData();
-    auto itFunc = g_memberFuncMap.find(inputCMD);
-    if (itFunc != g_memberFuncMap.end()) {
-        auto memberFunc = itFunc->second;
-        if (memberFunc != nullptr) {
-            (*memberFunc)();
-            return;
-        }
-    }
-    printf("inputCMD is:[%d]\n", inputCMD);
-    switch (inputCMD) {
-        case 'z': {
-            loopFlag = false;
-            printf("exit...\n");
-            break;
-        }
-        default:
-            printf("please input correct number...\n");
-            break;
-    }
-}
-
-void Init()
-{
-    g_memberFuncMap['q'] = SimInsertFun;
-    g_memberFuncMap['w'] = SimUpdateFun;
-    g_memberFuncMap['e'] = SimSelectFun;
-    g_memberFuncMap['r'] = SimDeleteFun;
-    g_memberFuncMap['t'] = SmsInsertFun;
-    g_memberFuncMap['y'] = SmsUpdateFun;
-    g_memberFuncMap['u'] = SmsSelectFun;
-    g_memberFuncMap['i'] = SmsDeleteFun;
-    g_memberFuncMap['o'] = PdpSelectFun;
-}
-
 void Looper()
 {
+    char inputCMD = '0';
     bool loopFlag = true;
+    std::shared_ptr<AppExecFwk::DataAbilityHelper> helper = nullptr;
     Init();
-
     while (loopFlag) {
         PrintfHint();
-        ProcessInput(loopFlag);
+        std::cin >> inputCMD;
+        int ret = VerifyCmd(inputCMD, helper);
+        if (ret == 0) {
+            return;
+        }
+        switch (inputCMD) {
+            case 'o': {
+                helper = CreateSmsHelper();
+                if (helper != nullptr) {
+                    PdpSelect(helper);
+                }
+                break;
+            }
+            case 'z': {
+                loopFlag = false;
+                break;
+            }
+            default: {
+                break;
+            }
+        }
     }
 }
 } // namespace Telephony

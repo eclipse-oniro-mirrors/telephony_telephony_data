@@ -54,7 +54,6 @@ int SimAbility::Insert(const Uri &uri, const NativeRdb::ValuesBucket &value)
     switch (simUriType) {
         case SimUriType::SIM_INFO: {
             helper_.Insert(id, value, TABLE_SIM_INFO);
-            DATA_STORAGE_LOGD("SimAbility::Insert SMS_MMS##id = %{public}" PRId64 "\n", id);
             break;
         }
         default:
@@ -105,7 +104,7 @@ int SimAbility::Update(
             break;
         }
         case SimUriType::SET_CARD: {
-            if (!value.HasColumn(SimData::SIM_ID) || !value.HasColumn("cardType")) {
+            if (!value.HasColumn(SimData::SIM_ID) || !value.HasColumn(SimData::CARD_TYPE)) {
                 break;
             }
             NativeRdb::ValueObject valueObject;
@@ -114,13 +113,14 @@ int SimAbility::Update(
                 break;
             }
             int simId;
-            result = valueObject.GetInt(simId);
-            bool isExistCardType = value.GetObject("cardType", valueObject);
+            valueObject.GetInt(simId);
+
+            bool isExistCardType = value.GetObject(SimData::CARD_TYPE, valueObject);
             if (!isExistCardType) {
                 break;
             }
             int cardType;
-            result = valueObject.GetInt(cardType);
+            valueObject.GetInt(cardType);
             result = helper_.SetDefaultCardByType(simId, cardType);
             break;
         }
@@ -133,7 +133,8 @@ int SimAbility::Update(
         PrintfAbsRdbPredicates(absRdbPredicates);
         result = helper_.Update(changedRows, value, *absRdbPredicates);
         free(absRdbPredicates);
-        DATA_STORAGE_LOGD("SimAbility::Update##result = %{public}d, changedRows = %{public}d\n", result, changedRows);
+        DATA_STORAGE_LOGD(
+            "SimAbility::Update##result = %{public}d, changedRows = %{public}d\n", result, changedRows);
     }
     DATA_STORAGE_LOGD("SimAbility::Update end##result = %{public}d\n", result);
     return result;
@@ -160,7 +161,8 @@ int SimAbility::Delete(const Uri &uri, const NativeRdb::DataAbilityPredicates &p
         PrintfAbsRdbPredicates(absRdbPredicates);
         int deletedRows;
         result = helper_.Delete(deletedRows, *absRdbPredicates);
-        DATA_STORAGE_LOGD("SimAbility::Delete##result = %{public}d, deletedRows = %{public}d\n", result, deletedRows);
+        DATA_STORAGE_LOGD(
+            "SimAbility::Delete##result = %{public}d, deletedRows = %{public}d\n", result, deletedRows);
         free(absRdbPredicates);
     }
     DATA_STORAGE_LOGD("SimAbility::Delete end##result = %{public}d\n", result);
@@ -211,7 +213,7 @@ void SimAbility::PrintfAbsRdbPredicates(const NativeRdb::AbsRdbPredicates *predi
     int32_t size = whereArgs.size();
     for (int i = 0; i < size; ++i) {
         DATA_STORAGE_LOGD("SimAbility::PrintfAbsRdbPredicates##index = %{public}d, whereArgs = %{public}s\n", i,
-                          whereArgs[i].c_str());
+            whereArgs[i].c_str());
     }
     std::string order = predicates->GetOrder();
     DATA_STORAGE_LOGD("SimAbility::PrintfAbsRdbPredicates##order = %{public}s\n", order.c_str());
