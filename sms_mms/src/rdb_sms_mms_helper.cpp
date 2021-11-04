@@ -122,11 +122,13 @@ void RdbSmsMmsHelper::CreateMmsPartTableStr(std::string &createTableStr)
     createTableStr.append("CREATE TABLE IF NOT EXISTS ").append(TABLE_MMS_PART);
     createTableStr.append("(").append(MmsPart::ID).append(" INTEGER PRIMARY KEY AUTOINCREMENT, ");
     createTableStr.append(SmsMmsInfo::MSG_ID).append(" INTEGER NOT NULL, ");
+    createTableStr.append(SmsMmsInfo::GROUP_ID).append(" INTEGER , ");
     createTableStr.append(MmsPart::INDEX).append(" INTEGER , ");
     createTableStr.append(MmsPart::TYPE).append(" INTEGER , ");
     createTableStr.append(MmsPart::LOCATION_PATH).append(" TEXT DEFAULT '', ");
     createTableStr.append(MmsPart::ENCODE).append(" INTEGER , ");
     createTableStr.append(MmsPart::STATE).append(" INTEGER , ");
+    createTableStr.append(MmsPart::CONTENT).append(" TEXT , ");
     createTableStr.append("foreign key(").append(SmsMmsInfo::MSG_ID).append(") references ");
     createTableStr.append(TABLE_SMS_MMS_INFO).append("(").append(SmsMmsInfo::MSG_ID);
     createTableStr.append(") on delete cascade on update cascade )");

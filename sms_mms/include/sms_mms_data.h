@@ -87,11 +87,12 @@ public:
 class MmsPart {
 public:
     static constexpr const char *ID = "id";
-    static constexpr const char *INDEX = "indexs";
+    static constexpr const char *INDEX = "index_";
     static constexpr const char *TYPE = "type";
     static constexpr const char *LOCATION_PATH = "location_path";
     static constexpr const char *STATE = "state";
     static constexpr const char *ENCODE = "encode";
+    static constexpr const char *CONTENT = "content";
 };
 
 const std::string TABLE_SMS_MMS_INFO = "sms_mms_info";
