@@ -75,6 +75,8 @@ int DataStorageGtest::SimInsert(const std::shared_ptr<AppExecFwk::DataAbilityHel
     value.PutInt(SimData::SIM_ID, 1);
     value.PutInt(SimData::SLOT_INDEX, 1);
     value.PutString(SimData::PHONE_NUMBER, "134xxxxxxxx");
+    value.PutString(SimData::ICC_ID, "icc_id");
+    value.PutString(SimData::CARD_ID, "card_id");
     return helper->Insert(uri, value);
 }
 
@@ -118,6 +120,7 @@ int DataStorageGtest::SmsInsert(const std::shared_ptr<AppExecFwk::DataAbilityHel
     value.PutString(SmsMmsInfo::RECEIVER_NUMBER, "134xxxxxxxx");
     value.PutString(SmsMmsInfo::MSG_CONTENT, "The first test text message content");
     value.PutInt(SmsMmsInfo::GROUP_ID, 1);
+    value.PutInt(SmsMmsInfo::IS_SENDER, 0);
     return helper->Insert(uri, value);
 }
 
