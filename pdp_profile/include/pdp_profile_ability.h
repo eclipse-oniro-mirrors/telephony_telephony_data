@@ -43,14 +43,41 @@ public:
     virtual int OpenFile(const Uri &uri, const std::string &mode) override;
 
 private:
+    /**
+     * Parse Uri Type
+     *
+     * @param uri Resource address
+     * @return return PdpProfileUriType
+     */
     PdpProfileUriType ParseUriType(Uri &uri);
-    void PrintfAbsRdbPredicates(const NativeRdb::AbsRdbPredicates *predicates);
-    void DataAbilityPredicatesConvertAbsRdbPredicates(
+
+    /**
+     * Convert DataAbilityPredicates to AbsRdbPredicates
+     *
+     * @param predicates DataAbilityPredicates
+     * @param absRdbPredicates AbsRdbPredicates
+     */
+    void ConvertPredicates(
         const NativeRdb::DataAbilityPredicates &predicates, NativeRdb::AbsRdbPredicates *absRdbPredicates);
+
+    /**
+    * Check whether the initialization succeeds
+    *
+    * @return true : succeed ,false : failed
+    */
+    bool IsInitOk();
+
+    /**
+     * Init UriMap
+     */
+    void InitUriMap();
 
 private:
     RdbPdpProfileHelper helper_;
     std::mutex lock_;
+    std::map<std::string, PdpProfileUriType> pdpProfileUriMap;
+    bool initDatabaseDir = false;
+    bool initRdbStore = false;
 };
 } // namespace Telephony
 } // namespace OHOS

@@ -26,36 +26,37 @@ namespace OHOS {
 using AppExecFwk::Ability;
 using AppExecFwk::AbilityLoader;
 namespace Telephony {
-std::map<std::string, MessageUriType> smsMmsUriMap = {
-    {"/sms_mms/sms_mms_info", MessageUriType::SMS_MMS},
-    {"/sms_mms/sms_mms_info/thirty", MessageUriType::THIRTY},
-    {"/sms_mms/sms_mms_info/max_group", MessageUriType::MAX_GROUP},
-    {"/sms_mms/sms_mms_info/unread_total", MessageUriType::UNREAD_TOTAL},
-    {"/sms_mms/mms_protocol", MessageUriType::MMS_PROTOCOL},
-    {"/sms_mms/sms_subsection", MessageUriType::SMS_SUBSECTION},
-    {"/sms_mms/mms_part", MessageUriType::MMS_PART}
-};
-
 void SmsMmsAbility::OnStart(const AppExecFwk::Want &want)
 {
-    DATA_STORAGE_LOGD("SmsMmsAbility::OnStart\n");
+    DATA_STORAGE_LOGI("SmsMmsAbility::OnStart\n");
     Ability::OnStart(want);
     std::string path = GetDatabaseDir();
     if (!path.empty()) {
+        initDatabaseDir = true;
         path.append("/");
+        InitUriMap();
         helper_.UpdateDbPath(path);
+        if (helper_.Init() == NativeRdb::E_OK) {
+            initRdbStore = true;
+        } else {
+            DATA_STORAGE_LOGE("SmsMmsAbility::OnStart rdb init fail!");
+            initRdbStore = false;
+        }
+    } else {
+        initDatabaseDir = false;
+        DATA_STORAGE_LOGE("SmsMmsAbility::OnStart##the databaseDir is empty\n");
     }
-    helper_.Init();
-    DATA_STORAGE_LOGD("SmsMmsAbility::OnStart ends##uri = %{public}s\n", path.c_str());
 }
 
 int SmsMmsAbility::Insert(const Uri &uri, const NativeRdb::ValuesBucket &value)
 {
+    if (!IsInitOk()) {
+        return DATA_STORAGE_ERROR;
+    }
     std::lock_guard<std::mutex> guard(lock_);
-    DATA_STORAGE_LOGD("SmsMmsAbility::Insert##uri = %{public}s\n", uri.ToString().c_str());
     Uri tempUri = uri;
     MessageUriType messageUriType = ParseUriType(tempUri);
-    int64_t id = TELEPHONY_ERROR;
+    int64_t id = DATA_STORAGE_ERROR;
     switch (messageUriType) {
         case MessageUriType::SMS_MMS: {
             helper_.Insert(id, value, TABLE_SMS_MMS_INFO);
@@ -74,20 +75,22 @@ int SmsMmsAbility::Insert(const Uri &uri, const NativeRdb::ValuesBucket &value)
             break;
         }
         default:
+            DATA_STORAGE_LOGI("SmsMmsAbility::Insert##uri = %{public}s\n", uri.ToString().c_str());
             break;
     }
-    DATA_STORAGE_LOGD("SmsMmsAbility::Insert end##id = %{public}" PRId64 "\n", id);
     return id;
 }
 
 std::shared_ptr<NativeRdb::AbsSharedResultSet> SmsMmsAbility::Query(
     const Uri &uri, const std::vector<std::string> &columns, const NativeRdb::DataAbilityPredicates &predicates)
 {
-    DATA_STORAGE_LOGD("SmsMmsAbility::Query##uri = %{public}s\n", uri.ToString().c_str());
+    std::unique_ptr<NativeRdb::AbsSharedResultSet> resultSet;
+    if (!IsInitOk()) {
+        return resultSet;
+    }
     Uri tempUri = uri;
     MessageUriType messageUriType = ParseUriType(tempUri);
     NativeRdb::AbsRdbPredicates *absRdbPredicates = nullptr;
-    std::unique_ptr<NativeRdb::AbsSharedResultSet> resultSet;
     switch (messageUriType) {
         case MessageUriType::SMS_MMS: {
             absRdbPredicates = new NativeRdb::AbsRdbPredicates(TABLE_SMS_MMS_INFO);
@@ -114,14 +117,16 @@ std::shared_ptr<NativeRdb::AbsSharedResultSet> SmsMmsAbility::Query(
             break;
         }
         default:
+            DATA_STORAGE_LOGI("SmsMmsAbility::Query##uri = %{public}s\n", uri.ToString().c_str());
             break;
     }
     if (absRdbPredicates != nullptr) {
-        DataAbilityPredicatesConvertAbsRdbPredicates(predicates, absRdbPredicates);
-        PrintfAbsRdbPredicates(absRdbPredicates);
+        ConvertPredicates(predicates, absRdbPredicates);
         resultSet = helper_.Query(*absRdbPredicates, columns);
         free(absRdbPredicates);
-        DATA_STORAGE_LOGD("SmsMmsAbility::Query ------ ");
+        absRdbPredicates = nullptr;
+    } else {
+        DATA_STORAGE_LOGE("SmsMmsAbility::Query  NativeRdb::AbsRdbPredicates is null!");
     }
     return resultSet;
 }
@@ -129,11 +134,13 @@ std::shared_ptr<NativeRdb::AbsSharedResultSet> SmsMmsAbility::Query(
 int SmsMmsAbility::Update(
     const Uri &uri, const NativeRdb::ValuesBucket &value, const NativeRdb::DataAbilityPredicates &predicates)
 {
+    int result = DATA_STORAGE_ERROR;
+    if (!IsInitOk()) {
+        return result;
+    }
     std::lock_guard<std::mutex> guard(lock_);
-    DATA_STORAGE_LOGD("SmsMmsAbility::Update##uri = %{public}s\n", uri.ToString().c_str());
     Uri tempUri = uri;
     MessageUriType messageUriType = ParseUriType(tempUri);
-    int result = TELEPHONY_ERROR;
     NativeRdb::AbsRdbPredicates *absRdbPredicates = nullptr;
     switch (messageUriType) {
         case MessageUriType::SMS_MMS: {
@@ -153,28 +160,30 @@ int SmsMmsAbility::Update(
             break;
         }
         default:
+            DATA_STORAGE_LOGI("SmsMmsAbility::Update##uri = %{public}s\n", uri.ToString().c_str());
             break;
     }
     if (absRdbPredicates != nullptr) {
-        int changedRows;
-        DataAbilityPredicatesConvertAbsRdbPredicates(predicates, absRdbPredicates);
-        PrintfAbsRdbPredicates(absRdbPredicates);
+        int changedRows = 0;
+        ConvertPredicates(predicates, absRdbPredicates);
         result = helper_.Update(changedRows, value, *absRdbPredicates);
         free(absRdbPredicates);
-        DATA_STORAGE_LOGD(
-            "SmsMmsAbility::Update##result = %{public}d, changedRows = %{public}d\n", result, changedRows);
+        absRdbPredicates = nullptr;
+    } else {
+        DATA_STORAGE_LOGE("SmsMmsAbility::Update  NativeRdb::AbsRdbPredicates is null!");
     }
-    DATA_STORAGE_LOGD("SmsMmsAbility::Update end##result = %{public}d\n", result);
     return result;
 }
 
 int SmsMmsAbility::Delete(const Uri &uri, const NativeRdb::DataAbilityPredicates &predicates)
 {
+    int result = DATA_STORAGE_ERROR;
+    if (!IsInitOk()) {
+        return result;
+    }
     std::lock_guard<std::mutex> guard(lock_);
-    DATA_STORAGE_LOGD("SmsMmsAbility::Delete##uri = %{public}s\n", uri.ToString().c_str());
     Uri tempUri = uri;
     MessageUriType messageUriType = ParseUriType(tempUri);
-    int result = TELEPHONY_ERROR;
     NativeRdb::AbsRdbPredicates *absRdbPredicates = nullptr;
     switch (messageUriType) {
         case MessageUriType::SMS_MMS: {
@@ -183,6 +192,10 @@ int SmsMmsAbility::Delete(const Uri &uri, const NativeRdb::DataAbilityPredicates
         }
         case MessageUriType::THIRTY: {
             result = helper_.DeleteDataByThirty();
+            if (result != NativeRdb::E_OK) {
+                DATA_STORAGE_LOGE("SmsMmsAbility::Delete  DeleteDataByThirty fail!");
+                result = static_cast<int>(LoadProFileErrorType::DELETE_THIRTY_DATA_FAIL);
+            }
             break;
         }
         case MessageUriType::MMS_PROTOCOL: {
@@ -198,31 +211,54 @@ int SmsMmsAbility::Delete(const Uri &uri, const NativeRdb::DataAbilityPredicates
             break;
         }
         default:
+            DATA_STORAGE_LOGI("SmsMmsAbility::Delete##uri = %{public}s\n", uri.ToString().c_str());
             break;
     }
     if (absRdbPredicates != nullptr) {
-        DataAbilityPredicatesConvertAbsRdbPredicates(predicates, absRdbPredicates);
-        PrintfAbsRdbPredicates(absRdbPredicates);
-        int deletedRows;
+        ConvertPredicates(predicates, absRdbPredicates);
+        int deletedRows = 0;
         result = helper_.Delete(deletedRows, *absRdbPredicates);
-        DATA_STORAGE_LOGD(
-            "SmsMmsAbility::Delete##result = %{public}d, deletedRows = %{public}d\n", result, deletedRows);
         free(absRdbPredicates);
+        absRdbPredicates = nullptr;
+    } else if (result == DATA_STORAGE_ERROR) {
+        DATA_STORAGE_LOGE("SmsMmsAbility::Delete  NativeRdb::AbsRdbPredicates is null!");
     }
-    DATA_STORAGE_LOGD("SmsMmsAbility::Delete end##result = %{public}d\n", result);
     return result;
+}
+
+bool SmsMmsAbility::IsInitOk()
+{
+    if (!initDatabaseDir) {
+        DATA_STORAGE_LOGE("SmsMmsAbility::IsInitOk initDatabaseDir failed!");
+    } else if (!initRdbStore) {
+        DATA_STORAGE_LOGE("SmsMmsAbility::IsInitOk initRdbStore failed!");
+    };
+    return initDatabaseDir && initRdbStore;
+}
+
+void SmsMmsAbility::InitUriMap()
+{
+    smsMmsUriMap = {
+        {"/sms_mms/sms_mms_info", MessageUriType::SMS_MMS},
+        {"/sms_mms/sms_mms_info/thirty", MessageUriType::THIRTY},
+        {"/sms_mms/sms_mms_info/max_group", MessageUriType::MAX_GROUP},
+        {"/sms_mms/sms_mms_info/unread_total", MessageUriType::UNREAD_TOTAL},
+        {"/sms_mms/mms_protocol", MessageUriType::MMS_PROTOCOL},
+        {"/sms_mms/sms_subsection", MessageUriType::SMS_SUBSECTION},
+        {"/sms_mms/mms_part", MessageUriType::MMS_PART}
+    };
 }
 
 std::string SmsMmsAbility::GetType(const Uri &uri)
 {
-    DATA_STORAGE_LOGD("SmsMmsAbility::GetType##uri = %{public}s\n", uri.ToString().c_str());
+    DATA_STORAGE_LOGI("SmsMmsAbility::GetType##uri = %{public}s\n", uri.ToString().c_str());
     std::string retval(uri.ToString());
     return retval;
 }
 
 int SmsMmsAbility::OpenFile(const Uri &uri, const std::string &mode)
 {
-    DATA_STORAGE_LOGD("SmsMmsAbility::OpenFile##uri = %{public}s\n", uri.ToString().c_str());
+    DATA_STORAGE_LOGI("SmsMmsAbility::OpenFile##uri = %{public}s\n", uri.ToString().c_str());
     Uri tempUri = uri;
     MessageUriType messageUriType = ParseUriType(tempUri);
     return static_cast<int>(messageUriType);
@@ -230,38 +266,25 @@ int SmsMmsAbility::OpenFile(const Uri &uri, const std::string &mode)
 
 int SmsMmsAbility::BatchInsert(const Uri &uri, const std::vector<NativeRdb::ValuesBucket> &values)
 {
+    int result = DATA_STORAGE_ERROR;
+    if (!IsInitOk()) {
+        return result;
+    }
     std::lock_guard<std::mutex> guard(lock_);
-    DATA_STORAGE_LOGD("SmsMmsAbility::Insert##uri = %{public}s\n", uri.ToString().c_str());
     Uri tempUri = uri;
     MessageUriType messageUriType = ParseUriType(tempUri);
-    int64_t id;
-    int result = TELEPHONY_ERROR;
-    switch (messageUriType) {
-        case MessageUriType::SMS_MMS: {
-            result = helper_.BatchInsertSmsMmsInfo(id, values);
-            DATA_STORAGE_LOGD(
-                "SmsMmsAbility::Insert ALL##BatchInsert = %{public}d, id = %{public}" PRId64 "\n", result, id);
-            break;
-        }
-        case MessageUriType::MMS_PROTOCOL: {
-            break;
-        }
-        case MessageUriType::SMS_SUBSECTION: {
-            break;
-        }
-        case MessageUriType::MMS_PART: {
-            break;
-        }
-        default:
-            break;
+    int64_t id = DATA_STORAGE_ERROR;
+    if (messageUriType == MessageUriType::SMS_MMS) {
+        result = helper_.BatchInsertSmsMmsInfo(id, values);
+    } else {
+        DATA_STORAGE_LOGI("SmsMmsAbility::BatchInsert##uri = %{public}s\n", uri.ToString().c_str());
     }
-    DATA_STORAGE_LOGD("SmsMmsAbility::Insert end ##result = %{public}d\n", result);
     return result;
 }
 
 MessageUriType SmsMmsAbility::ParseUriType(Uri &uri)
 {
-    DATA_STORAGE_LOGD("SmsMmsAbility::ParseUriType start\n");
+    DATA_STORAGE_LOGI("SmsMmsAbility::ParseUriType start\n");
     MessageUriType messageUriType = MessageUriType::UNKNOW;
     std::string uriPath = uri.ToString();
     if (!uriPath.empty()) {
@@ -269,46 +292,18 @@ MessageUriType SmsMmsAbility::ParseUriType(Uri &uri)
         Uri tempUri(uriPath);
         std::string path = tempUri.GetPath();
         if (!path.empty()) {
-            DATA_STORAGE_LOGD("SmsMmsAbility::ParseUriType##path = %{public}s\n", path.c_str());
+            DATA_STORAGE_LOGI("SmsMmsAbility::ParseUriType##path = %{public}s\n", path.c_str());
             std::map<std::string, MessageUriType>::iterator it = smsMmsUriMap.find(path);
             if (it != smsMmsUriMap.end()) {
                 messageUriType = it->second;
-                DATA_STORAGE_LOGD("SmsMmsAbility::ParseUriType##messageUriType = %{public}d\n", messageUriType);
+                DATA_STORAGE_LOGI("SmsMmsAbility::ParseUriType##messageUriType = %{public}d\n", messageUriType);
             }
         }
     }
     return messageUriType;
 }
 
-void SmsMmsAbility::PrintfAbsRdbPredicates(const NativeRdb::AbsRdbPredicates *predicates)
-{
-    std::string whereClause = predicates->GetWhereClause();
-    DATA_STORAGE_LOGD("SmsMmsAbility::PrintfAbsRdbPredicates##whereClause = %{public}s\n", whereClause.c_str());
-    std::vector<std::string> whereArgs = predicates->GetWhereArgs();
-    int32_t size = whereArgs.size();
-    for (int i = 0; i < size; ++i) {
-        DATA_STORAGE_LOGD("SmsMmsAbility::PrintfAbsRdbPredicates##index = %{public}d, whereArgs = %{public}s\n", i,
-            whereArgs[i].c_str());
-    }
-    std::string order = predicates->GetOrder();
-    DATA_STORAGE_LOGD("SmsMmsAbility::PrintfAbsRdbPredicates##order = %{public}s\n", order.c_str());
-    int limit = predicates->GetLimit();
-    DATA_STORAGE_LOGD("SmsMmsAbility::PrintfAbsRdbPredicates##limit = %{public}d\n", limit);
-    int offset = predicates->GetOffset();
-    DATA_STORAGE_LOGD("SmsMmsAbility::PrintfAbsRdbPredicates##offset = %{public}d\n", offset);
-    bool isDistinct = predicates->IsDistinct();
-    DATA_STORAGE_LOGD("SmsMmsAbility::PrintfAbsRdbPredicates##isDistinct = %{public}d\n", isDistinct);
-    std::string group = predicates->GetGroup();
-    DATA_STORAGE_LOGD("SmsMmsAbility::PrintfAbsRdbPredicates##Group = %{public}s\n", group.c_str());
-    std::string index = predicates->GetIndex();
-    DATA_STORAGE_LOGD("SmsMmsAbility::PrintfAbsRdbPredicates##Index = %{public}s\n", index.c_str());
-    bool isNeedAnd = predicates->IsNeedAnd();
-    DATA_STORAGE_LOGD("SmsMmsAbility::PrintfAbsRdbPredicates##isNeedAnd = %{public}d\n", isNeedAnd);
-    bool isSorted = predicates->IsSorted();
-    DATA_STORAGE_LOGD("SmsMmsAbility::PrintfAbsRdbPredicates##isSorted = %{public}d\n", isSorted);
-}
-
-void SmsMmsAbility::DataAbilityPredicatesConvertAbsRdbPredicates(
+void SmsMmsAbility::ConvertPredicates(
     const NativeRdb::DataAbilityPredicates &dataPredicates, NativeRdb::AbsRdbPredicates *absRdbPredicates)
 {
     NativeRdb::PredicatesUtils::SetWhereClauseAndArgs(

@@ -22,13 +22,13 @@ namespace OHOS {
 namespace Telephony {
 int RdbPdpProfileCallback::OnUpgrade(NativeRdb::RdbStore &rdbStore, int oldVersion, int newVersion)
 {
-    DATA_STORAGE_LOGD("RdbPdpProfileCallback::OnUpgrade##oldVersion = %d, newVersion = %d\n", oldVersion, newVersion);
+    DATA_STORAGE_LOGI("RdbPdpProfileCallback::OnUpgrade##oldVersion = %d, newVersion = %d\n", oldVersion, newVersion);
     return NativeRdb::E_OK;
 }
 
 int RdbPdpProfileCallback::OnDowngrade(NativeRdb::RdbStore &rdbStore, int currentVersion, int targetVersion)
 {
-    DATA_STORAGE_LOGD(
+    DATA_STORAGE_LOGI(
         "RdbPdpProfileCallback::OnDowngrade##currentVersion = %d, "
         "targetVersion = %d\n",
         currentVersion, targetVersion);
@@ -37,7 +37,7 @@ int RdbPdpProfileCallback::OnDowngrade(NativeRdb::RdbStore &rdbStore, int curren
 
 int RdbPdpProfileCallback::OnOpen(NativeRdb::RdbStore &rdbStore)
 {
-    DATA_STORAGE_LOGD("RdbPdpProfileCallback::OnOpen\n");
+    DATA_STORAGE_LOGI("RdbPdpProfileCallback::OnOpen\n");
     InitData(rdbStore, TABLE_PDP_PROFILE);
     return NativeRdb::E_OK;
 }
@@ -46,8 +46,10 @@ void RdbPdpProfileCallback::InitData(NativeRdb::RdbStore &rdbStore, const std::s
 {
     ParserUtil util;
     std::vector<PdpProfile> vec;
-    int status = util.ParserPdpProfileJson(vec);
-    DATA_STORAGE_LOGD("RdbPdpProfileCallback::InitData ParserPdpProfileJson::state = %{public}d\n", status);
+    int resultCode = util.ParserPdpProfileJson(vec);
+    if (resultCode != DATA_STORAGE_SUCCESS) {
+        return;
+    }
     for (size_t i = 0; i < vec.size(); i++) {
         NativeRdb::ValuesBucket value;
         util.ParserPdpProfileToValuesBucket(value, vec[i]);

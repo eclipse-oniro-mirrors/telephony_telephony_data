@@ -24,6 +24,7 @@ public:
     static constexpr const char *PROFILE_NAME = "profile_name";
     static constexpr const char *MCC = "mcc";
     static constexpr const char *MNC = "mnc";
+    static constexpr const char *MCCMNC = "mccmnc";
     static constexpr const char *APN = "apn";
     static constexpr const char *AUTH_TYPE = "auth_type";
     static constexpr const char *AUTH_USER = "auth_user";
@@ -59,13 +60,19 @@ struct PdpProfile {
 };
 
 
-enum ApnType { DEFAULT, IMS, MMS, ALL };
+enum class ApnType {
+    DEFAULT, IMS, MMS, ALL
+};
 
-enum ApnAuthType { None = 0, PAP, CHAP, PAP_OR_CHAP };
+enum class ApnAuthType {
+    None = 0, PAP, CHAP, PAP_OR_CHAP
+};
 
-enum PdpProtocol { IPV4 = 0, IPV6, IPV4V6 };
+enum class PdpProtocol {
+    IPV4 = 0, IPV6, IPV4V6
+};
 
-enum BearingSystemType {
+enum class BearingSystemType {
     UNKNOWN = 0,
     LTE,
     HSPAP,

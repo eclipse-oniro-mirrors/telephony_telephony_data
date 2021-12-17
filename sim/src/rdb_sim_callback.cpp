@@ -19,7 +19,7 @@ namespace OHOS {
 namespace Telephony {
 int RdbSimCallback::OnUpgrade(NativeRdb::RdbStore &rdbStore, int oldVersion, int newVersion)
 {
-    DATA_STORAGE_LOGD(
+    DATA_STORAGE_LOGI(
         "Data_Storage RdbSimCallback::OnUpgrade##oldVersion = %d, "
         "newVersion = %d\n",
         oldVersion, newVersion);
@@ -28,7 +28,7 @@ int RdbSimCallback::OnUpgrade(NativeRdb::RdbStore &rdbStore, int oldVersion, int
 
 int RdbSimCallback::OnDowngrade(NativeRdb::RdbStore &rdbStore, int currentVersion, int targetVersion)
 {
-    DATA_STORAGE_LOGD(
+    DATA_STORAGE_LOGI(
         "Data_Storage RdbSimCallback::OnDowngrade##currentVersion = "
         "%d, targetVersion = %d\n",
         currentVersion, targetVersion);

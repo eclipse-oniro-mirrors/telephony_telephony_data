@@ -21,8 +21,13 @@
 
 namespace OHOS {
 namespace Telephony {
-void RdbPdpProfileHelper::Init()
+RdbPdpProfileHelper::RdbPdpProfileHelper()
 {
+}
+
+int RdbPdpProfileHelper::Init()
+{
+    int errCode = NativeRdb::E_OK;
     NativeRdb::RdbStoreConfig config(dbPath_);
     config.SetJournalMode(NativeRdb::JournalMode::MODE_TRUNCATE);
     std::string pdpProfileStr;
@@ -30,11 +35,8 @@ void RdbPdpProfileHelper::Init()
     std::vector<std::string> createTableVec;
     createTableVec.push_back(pdpProfileStr);
     RdbPdpProfileCallback callback(createTableVec);
-    CreateRdbStore(config, version_, callback, errCode_);
-}
-
-RdbPdpProfileHelper::RdbPdpProfileHelper()
-{
+    CreateRdbStore(config, VERSION, callback, errCode);
+    return errCode;
 }
 
 void RdbPdpProfileHelper::UpdateDbPath(const std::string &path)
@@ -49,6 +51,7 @@ void RdbPdpProfileHelper::CreatePdpProfileTableStr(std::string &createTableStr, 
     createTableStr.append(PdpProfileData::PROFILE_NAME).append(" TEXT DEFAULT '', ");
     createTableStr.append(PdpProfileData::MCC).append(" TEXT DEFAULT '', ");
     createTableStr.append(PdpProfileData::MNC).append(" TEXT DEFAULT '', ");
+    createTableStr.append(PdpProfileData::MCCMNC).append(" TEXT DEFAULT '', ");
     createTableStr.append(PdpProfileData::APN).append(" TEXT DEFAULT '', ");
     createTableStr.append(PdpProfileData::AUTH_TYPE).append(" INTEGER, ");
     createTableStr.append(PdpProfileData::AUTH_USER).append(" TEXT DEFAULT '', ");
@@ -72,33 +75,49 @@ void RdbPdpProfileHelper::CreatePdpProfileTableStr(std::string &createTableStr, 
     createTableStr.append(PdpProfileData::PROXY_IP_ADDRESS).append("))");
 }
 
-void RdbPdpProfileHelper::ResetApn()
+int RdbPdpProfileHelper::ResetApn()
 {
     int ret = BeginTransaction();
+    if (ret != NativeRdb::E_OK) {
+        DATA_STORAGE_LOGE("RdbSimHelper::SetDefaultCardByType BeginTransaction is error!");
+        return ret;
+    }
     std::string pdpProfileStr;
     CreatePdpProfileTableStr(pdpProfileStr, TEMP_TABLE_PDP_PROFILE);
-
     ParserUtil util;
     std::vector<PdpProfile> vec;
-    int state = util.ParserPdpProfileJson(vec);
-    DATA_STORAGE_LOGD("RdbPdpProfileHelper::RestoreApn state = %{public}d\n", state);
+    ret = util.ParserPdpProfileJson(vec);
+    if (ret != DATA_STORAGE_SUCCESS) {
+        return ret;
+    }
     for (size_t i = 0; i < vec.size(); i++) {
         NativeRdb::ValuesBucket value;
         util.ParserPdpProfileToValuesBucket(value, vec[i]);
         int64_t id;
         Insert(id, value, TEMP_TABLE_PDP_PROFILE);
     }
-
     ret = ExecuteSql("drop table " + TABLE_PDP_PROFILE);
-    DATA_STORAGE_LOGD("RdbPdpProfileHelper::RestoreApn drop table ret = %{public}d\n", ret);
-
+    if (ret != NativeRdb::E_OK) {
+        DATA_STORAGE_LOGE("RdbPdpProfileHelper::RestoreApn drop table ret = %{public}d", ret);
+        EndTransactionAction();
+        return ret;
+    }
     std::string sql;
     sql.append("alter table ").append(TEMP_TABLE_PDP_PROFILE).append(" rename to ").append(TABLE_PDP_PROFILE);
     ret = ExecuteSql(sql);
-    DATA_STORAGE_LOGD("RdbPdpProfileHelper::RestoreApn alter table ret = %{public}d\n", ret);
+    if (ret != NativeRdb::E_OK) {
+        DATA_STORAGE_LOGE("RdbPdpProfileHelper::RestoreApn alter table ret = %{public}d", ret);
+        EndTransactionAction();
+        return ret;
+    }
+    return EndTransactionAction();
+}
 
-    ret = MarkAsCommit();
-    ret = EndTransaction();
+int RdbPdpProfileHelper::EndTransactionAction()
+{
+    int result = MarkAsCommit();
+    result = EndTransaction();
+    return result;
 }
 } // namespace Telephony
 } // namespace OHOS

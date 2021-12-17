@@ -18,6 +18,7 @@
 #include "data_storage_log_wrapper.h"
 #include "sim_data.h"
 #include "sms_mms_data.h"
+#include "pdp_profile_data.h"
 
 namespace OHOS {
 namespace Telephony {
@@ -42,9 +43,10 @@ void DataStorageGtest::TearDown(void)
     // step 3: input testcase teardown step
 }
 
-std::shared_ptr<AppExecFwk::DataAbilityHelper> DataStorageGtest::CreateDataAHelper(int32_t systemAbilityId) const
+std::shared_ptr<AppExecFwk::DataAbilityHelper> DataStorageGtest::CreateDataAHelper(
+    int32_t systemAbilityId, std::shared_ptr<Uri> dataAbilityUri) const
 {
-    DATA_STORAGE_LOGD("DataStorageGtest::CreateDataAHelper");
+    DATA_STORAGE_LOGI("DataStorageGtest::CreateDataAHelper");
     auto saManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (saManager == nullptr) {
         DATA_STORAGE_LOGE("DataStorageGtest Get system ability mgr failed.");
@@ -55,17 +57,34 @@ std::shared_ptr<AppExecFwk::DataAbilityHelper> DataStorageGtest::CreateDataAHelp
         DATA_STORAGE_LOGE("DataStorageGtest GetSystemAbility Service Failed.");
         return nullptr;
     }
-    return AppExecFwk::DataAbilityHelper::Creator(remoteObj);
+    return AppExecFwk::DataAbilityHelper::Creator(remoteObj, dataAbilityUri);
 }
 
-std::shared_ptr<AppExecFwk::DataAbilityHelper> DataStorageGtest::CreateSimHelper() const
+std::shared_ptr<AppExecFwk::DataAbilityHelper> DataStorageGtest::CreateSimHelper()
 {
-    return CreateDataAHelper(TELEPHONY_CORE_SERVICE_SYS_ABILITY_ID);
+    if (simDataAbilityHelper == nullptr) {
+        std::shared_ptr<Uri> dataAbilityUri = std::make_shared<Uri>(SIM_URI);
+        simDataAbilityHelper = CreateDataAHelper(TELEPHONY_CORE_SERVICE_SYS_ABILITY_ID, dataAbilityUri);
+    }
+    return simDataAbilityHelper;
 }
 
-std::shared_ptr<AppExecFwk::DataAbilityHelper> DataStorageGtest::CreateSmsHelper() const
+std::shared_ptr<AppExecFwk::DataAbilityHelper> DataStorageGtest::CreateSmsHelper()
 {
-    return CreateDataAHelper(TELEPHONY_SMS_MMS_SYS_ABILITY_ID);
+    if (smsDataAbilityHelper == nullptr) {
+        std::shared_ptr<Uri> dataAbilityUri = std::make_shared<Uri>(SMS_MMS_URI);
+        smsDataAbilityHelper = CreateDataAHelper(TELEPHONY_SMS_MMS_SYS_ABILITY_ID, dataAbilityUri);
+    }
+    return smsDataAbilityHelper;
+}
+
+std::shared_ptr<AppExecFwk::DataAbilityHelper> DataStorageGtest::CreatePdpProfileHelper()
+{
+    if (smsDataAbilityHelper == nullptr) {
+        std::shared_ptr<Uri> dataAbilityUri = std::make_shared<Uri>(PDP_PROFILE_URI);
+        pdpProfileDataAbilityHelper = CreateDataAHelper(TELEPHONY_SMS_MMS_SYS_ABILITY_ID, dataAbilityUri);
+    }
+    return pdpProfileDataAbilityHelper;
 }
 
 int DataStorageGtest::SimInsert(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const
@@ -156,6 +175,48 @@ int DataStorageGtest::SmsDelete(const std::shared_ptr<AppExecFwk::DataAbilityHel
     return helper->Delete(uri, predicates);
 }
 
+int DataStorageGtest::PdpProfileInsert(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const
+{
+    Uri uri("dataability:///com.ohos.pdpprofileability/net/pdp_profile");
+    NativeRdb::ValuesBucket value;
+    value.PutString(PdpProfileData::PROFILE_NAME, "frist_profile_name");
+    value.PutString(PdpProfileData::MCC, "460");
+    value.PutString(PdpProfileData::MNC, "91");
+    return helper->Insert(uri, value);
+}
+
+int DataStorageGtest::PdpProfileUpdate(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const
+{
+    Uri uri("dataability:///com.ohos.pdpprofileability/net/pdp_profile");
+    NativeRdb::ValuesBucket values;
+    values.PutString(PdpProfileData::PROFILE_NAME, "update_profile_name");
+    NativeRdb::DataAbilityPredicates predicates;
+    predicates.EqualTo(PdpProfileData::PROFILE_ID, "1");
+    return helper->Update(uri, values, predicates);
+}
+
+int DataStorageGtest::PdpProfileSelect(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const
+{
+    Uri uri("dataability:///com.ohos.pdpprofileability/net/pdp_profile");
+    std::vector<std::string> colume;
+    NativeRdb::DataAbilityPredicates predicates;
+    std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet = helper->Query(uri, colume, predicates);
+    if (resultSet != nullptr) {
+        int count;
+        resultSet->GetRowCount(count);
+        return count;
+    }
+    return -1;
+}
+
+int DataStorageGtest::PdpProfileDelete(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const
+{
+    Uri uri("dataability:///com.ohos.pdpprofileability/net/pdp_profile");
+    NativeRdb::DataAbilityPredicates predicates;
+    predicates.EqualTo(PdpProfileData::PROFILE_ID, "1");
+    return helper->Delete(uri, predicates);
+}
+
 HWTEST_F(DataStorageGtest, SimInsert_001, TestSize.Level1)
 {
     std::shared_ptr<AppExecFwk::DataAbilityHelper> helper = CreateSimHelper();
@@ -225,6 +286,42 @@ HWTEST_F(DataStorageGtest, SmsDelete_001, TestSize.Level1)
     int ret = -1;
     if (helper != nullptr) {
         ret = SmsDelete(helper);
+    }
+}
+
+HWTEST_F(DataStorageGtest, PdpProfileInsert_001, TestSize.Level1)
+{
+    std::shared_ptr<AppExecFwk::DataAbilityHelper> helper = CreatePdpProfileHelper();
+    int ret = -1;
+    if (helper != nullptr) {
+        ret = PdpProfileInsert(helper);
+    }
+}
+
+HWTEST_F(DataStorageGtest, PdpProfileUpdate_001, TestSize.Level1)
+{
+    std::shared_ptr<AppExecFwk::DataAbilityHelper> helper = CreatePdpProfileHelper();
+    int ret = -1;
+    if (helper != nullptr) {
+        ret = PdpProfileUpdate(helper);
+    }
+}
+
+HWTEST_F(DataStorageGtest, PdpProfileSelect_001, TestSize.Level1)
+{
+    std::shared_ptr<AppExecFwk::DataAbilityHelper> helper = CreatePdpProfileHelper();
+    int ret = -1;
+    if (helper != nullptr) {
+        ret = PdpProfileSelect(helper);
+    }
+}
+
+HWTEST_F(DataStorageGtest, PdpProfileDelete_001, TestSize.Level1)
+{
+    std::shared_ptr<AppExecFwk::DataAbilityHelper> helper = CreatePdpProfileHelper();
+    int ret = -1;
+    if (helper != nullptr) {
+        ret = PdpProfileDelete(helper);
     }
 }
 } // namespace Telephony

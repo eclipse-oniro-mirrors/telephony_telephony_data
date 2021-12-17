@@ -44,14 +44,50 @@ public:
     virtual int OpenFile(const Uri &uri, const std::string &mode) override;
 
 private:
+    /**
+     * Parse Uri Type
+     *
+     * @param uri Resource address
+     * @return return SimUriType
+     */
     SimUriType ParseUriType(Uri &uri);
-    void PrintfAbsRdbPredicates(const NativeRdb::AbsRdbPredicates *predicates);
-    void DataAbilityPredicatesConvertAbsRdbPredicates(
+
+    /**
+     * Convert DataAbilityPredicates to AbsRdbPredicates
+     *
+     * @param predicates DataAbilityPredicates
+     * @param absRdbPredicates AbsRdbPredicates
+     */
+    void ConvertPredicates(
         const NativeRdb::DataAbilityPredicates &predicates, NativeRdb::AbsRdbPredicates *absRdbPredicates);
+
+    /**
+    * Set card type
+    *
+    * @param value Table field data
+    * @return Is it successful
+    */
+
+    int SetCard(const NativeRdb::ValuesBucket &value);
+
+    /**
+    * Check whether the initialization succeeds
+    *
+    * @return true : succeed ,false : failed
+    */
+    bool IsInitOk();
+
+    /**
+     * Init SimUriMap
+     */
+    void InitUriMap();
 
 private:
     RdbSimHelper helper_;
     std::mutex lock_;
+    std::map<std::string, SimUriType> simUriMap;
+    bool initDatabaseDir = false;
+    bool initRdbStore = false;
 };
 } // namespace Telephony
 } // namespace OHOS

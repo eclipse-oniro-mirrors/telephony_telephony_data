@@ -45,7 +45,6 @@ public:
     int BeginTransaction();
     int MarkAsCommit();
     int EndTransaction();
-    void FolderExists();
 
     void ReplaceAllStr(std::string &path, const std::string &oldStr, const std::string &newStr);
 

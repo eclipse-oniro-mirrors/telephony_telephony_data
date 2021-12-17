@@ -20,8 +20,13 @@
 
 namespace OHOS {
 namespace Telephony {
-void RdbSimHelper::Init()
+RdbSimHelper::RdbSimHelper()
 {
+}
+
+int RdbSimHelper::Init()
+{
+    int errCode = NativeRdb::E_OK;
     NativeRdb::RdbStoreConfig config(dbPath_);
     config.SetJournalMode(NativeRdb::JournalMode::MODE_TRUNCATE);
     std::string simInfoStr;
@@ -29,11 +34,8 @@ void RdbSimHelper::Init()
     std::vector<std::string> createTableVec;
     createTableVec.push_back(simInfoStr);
     RdbSimCallback callback(createTableVec);
-    CreateRdbStore(config, version_, callback, errCode_);
-}
-
-RdbSimHelper::RdbSimHelper()
-{
+    CreateRdbStore(config, VERSION, callback, errCode);
+    return errCode;
 }
 
 void RdbSimHelper::UpdateDbPath(const std::string &path)
@@ -70,30 +72,32 @@ int32_t RdbSimHelper::SetDefaultCardByType(int32_t simId, int32_t type)
         DATA_STORAGE_LOGE("RdbSimHelper::SetDefaultCardByType BeginTransaction is error!");
         return result;
     }
-    result = UpdateCardStateByType(type, 0, 1);
+    int updateState = 0;
+    int whereSate = 1;
+    result = UpdateCardStateByType(type, updateState, whereSate);
     if (result != NativeRdb::E_OK) {
         DATA_STORAGE_LOGE("RdbSimHelper::SetDefaultCardByType UpdateCardStateByType is error!");
         EndTransactionAction();
         return result;
     }
-    int changedRows;
+    int changedRows = 0;
     NativeRdb::ValuesBucket values;
     switch (type) {
-        case MAIN: {
+        case static_cast<int32_t>(SimCardType::MAIN): {
             values.PutInt(SimData::IS_MAIN_CARD, 1);
             break;
         }
-        case MESSAGE: {
+        case static_cast<int32_t>(SimCardType::MESSAGE): {
             values.PutInt(SimData::IS_MESSAGE_CARD, 1);
             break;
         }
-        case CELLULAR_DATA: {
+        case static_cast<int32_t>(SimCardType::CELLULAR_DATA): {
             values.PutInt(SimData::IS_CELLULAR_DATA_CARD, 1);
             break;
         }
         default:
             DATA_STORAGE_LOGE("RdbSimHelper::SetDefaultDataByType is error!");
-            return TELEPHONY_ERROR;
+            return DATA_STORAGE_ERROR;
     }
     std::string whereClause;
     whereClause.append(SimData::SIM_ID).append("=").append(std::to_string(simId));
@@ -107,24 +111,24 @@ int32_t RdbSimHelper::SetDefaultCardByType(int32_t simId, int32_t type)
 
 int32_t RdbSimHelper::UpdateCardStateByType(int32_t type, int32_t updateState, int32_t whereSate)
 {
-    int32_t result = TELEPHONY_ERROR;
+    int32_t result = DATA_STORAGE_ERROR;
     bool isExist = false;
     NativeRdb::ValuesBucket values;
     std::string whereClause;
     switch (type) {
-        case MAIN: {
+        case static_cast<int32_t>(SimCardType::MAIN): {
             isExist = true;
             values.PutInt(SimData::IS_MAIN_CARD, updateState);
             whereClause.append(SimData::IS_MAIN_CARD).append("=").append(std::to_string(whereSate));
             break;
         }
-        case MESSAGE: {
+        case static_cast<int32_t>(SimCardType::MESSAGE): {
             isExist = true;
             values.PutInt(SimData::IS_MESSAGE_CARD, updateState);
             whereClause.append(SimData::IS_MESSAGE_CARD).append("=").append(std::to_string(whereSate));
             break;
         }
-        case CELLULAR_DATA: {
+        case static_cast<int32_t>(SimCardType::CELLULAR_DATA): {
             isExist = true;
             values.PutInt(SimData::IS_CELLULAR_DATA_CARD, updateState);
             whereClause.append(SimData::IS_CELLULAR_DATA_CARD).append("=").append(std::to_string(whereSate));
@@ -134,20 +138,17 @@ int32_t RdbSimHelper::UpdateCardStateByType(int32_t type, int32_t updateState, i
             break;
     }
     if (isExist) {
-        int changedRows;
+        int changedRows = 0;
         return Update(changedRows, TABLE_SIM_INFO, values, whereClause);
     }
     return result;
 }
 
-void RdbSimHelper::EndTransactionAction()
+int RdbSimHelper::EndTransactionAction()
 {
     int result = MarkAsCommit();
-    DATA_STORAGE_LOGD(
-        "RdbSimHelper::SetDefaultMessageCard MarkAsCommit##result = %{public}d", result);
     result = EndTransaction();
-    DATA_STORAGE_LOGD(
-        "RdbSimHelper::SetDefaultMessageCard EndTransaction##result = %{public}d", result);
+    return result;
 }
 
 int32_t RdbSimHelper::ClearData()

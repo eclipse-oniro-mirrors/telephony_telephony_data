@@ -19,8 +19,13 @@
 
 namespace OHOS {
 namespace Telephony {
-void RdbSmsMmsHelper::Init()
+RdbSmsMmsHelper::RdbSmsMmsHelper()
 {
+}
+
+int RdbSmsMmsHelper::Init()
+{
+    int errCode = NativeRdb::E_OK;
     NativeRdb::RdbStoreConfig config(dbPath_);
     config.SetJournalMode(NativeRdb::JournalMode::MODE_TRUNCATE);
     std::string messageInfoStr;
@@ -37,11 +42,8 @@ void RdbSmsMmsHelper::Init()
     createTableVec.push_back(smsSubsectionStr);
     createTableVec.push_back(mmsPartStr);
     RdbSmsMmsCallback callback(createTableVec);
-    CreateRdbStore(config, version_, callback, errCode_);
-}
-
-RdbSmsMmsHelper::RdbSmsMmsHelper()
-{
+    CreateRdbStore(config, VERSION, callback, errCode);
+    return errCode;
 }
 
 void RdbSmsMmsHelper::CreateSmsMmsInfoTableStr(std::string &createTableStr)
@@ -123,7 +125,9 @@ void RdbSmsMmsHelper::CreateMmsPartTableStr(std::string &createTableStr)
     createTableStr.append("(").append(MmsPart::ID).append(" INTEGER PRIMARY KEY AUTOINCREMENT, ");
     createTableStr.append(SmsMmsInfo::MSG_ID).append(" INTEGER NOT NULL, ");
     createTableStr.append(SmsMmsInfo::GROUP_ID).append(" INTEGER , ");
-    createTableStr.append(MmsPart::INDEX).append(" INTEGER , ");
+    createTableStr.append(MmsPart::PART_INDEX).append(" INTEGER , ");
+    createTableStr.append(MmsPart::PART_SIZE).append(" TEXT , ");
+    createTableStr.append(MmsPart::RECORDING_TIME).append(" TEXT , ");
     createTableStr.append(MmsPart::TYPE).append(" INTEGER , ");
     createTableStr.append(MmsPart::LOCATION_PATH).append(" TEXT DEFAULT '', ");
     createTableStr.append(MmsPart::ENCODE).append(" INTEGER , ");
@@ -141,7 +145,7 @@ void RdbSmsMmsHelper::UpdateDbPath(const std::string &path)
 
 int32_t RdbSmsMmsHelper::DeleteDataByThirty()
 {
-    int changedRows;
+    int changedRows = 0;
     int32_t result;
     std::string values;
     std::string date;
@@ -162,7 +166,6 @@ int32_t RdbSmsMmsHelper::BatchInsertSmsMmsInfo(int64_t &id, const std::vector<Na
     if (ret != NativeRdb::E_OK) {
         return ret;
     }
-    DATA_STORAGE_LOGD("RdbSmsMmsHelper::BatchInsertSmsMmsInfo BeginTransaction ret= %{public}d", ret);
     for (const NativeRdb::ValuesBucket &item : values) {
         ret = InsertSmsMmsInfo(id, item);
         if (ret != NativeRdb::E_OK) {
@@ -170,7 +173,6 @@ int32_t RdbSmsMmsHelper::BatchInsertSmsMmsInfo(int64_t &id, const std::vector<Na
         }
     }
     ret = EndTransaction();
-    DATA_STORAGE_LOGD("RdbSmsMmsHelper::BatchInsertSmsMmsInfo EndTransaction ret= %{public}d", ret);
     return ret;
 }
 
@@ -180,7 +182,6 @@ std::unique_ptr<NativeRdb::AbsSharedResultSet> RdbSmsMmsHelper::QueryMaxGroupId(
     std::string maxGroupId("maxGroupId");
     sql.append("select MAX(").append(SmsMmsInfo::GROUP_ID).append(") as ");
     sql.append(maxGroupId).append(" from ") .append(TABLE_SMS_MMS_INFO);
-    DATA_STORAGE_LOGD("RdbSmsMmsHelper::QueryMaxGroupId##sql = %{public}s\n", sql.c_str());
     return QuerySql(sql);
 }
 
@@ -191,7 +192,6 @@ std::unique_ptr<NativeRdb::AbsSharedResultSet> RdbSmsMmsHelper::StatisticsUnRead
     sql.append("count(CASE WHEN ").append(SmsMmsInfo::MSG_TYPE).append("=0 THEN 1 ELSE null END) as unreadCount, ");
     sql.append("count(CASE WHEN ").append(SmsMmsInfo::MSG_TYPE).append("=1 THEN 1 ELSE null END) as unreadTotalOfInfo");
     sql.append(" from ").append(TABLE_SMS_MMS_INFO).append(" WHERE ").append(SmsMmsInfo::IS_READ).append("=0");
-    DATA_STORAGE_LOGD("RdbSmsMmsHelper::StatisticsUnRead##sql = %{public}s\n", sql.c_str());
     return QuerySql(sql);
 }
 } // namespace Telephony

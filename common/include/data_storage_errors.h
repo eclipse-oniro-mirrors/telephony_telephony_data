@@ -23,14 +23,20 @@ namespace Telephony {
 constexpr int64_t TELEPHONY_DATA_STORAGE = 0x10;
 // Error code for telephony data storage
 constexpr ErrCode CORE_DATA_STORAGE_ERR_OFFSET = ErrCodeOffset(SUBSYS_TELEPONY, TELEPHONY_DATA_STORAGE);
-const int TELEPHONY_ERROR = -1;
-const int TELEPHONY_SUCCESS = 0;
-enum {
+const int DATA_STORAGE_ERROR = -1;
+const int DATA_STORAGE_SUCCESS = 0;
+enum class LoadProFileErrorType {
     OPEN_FILE_ERROR = CORE_DATA_STORAGE_ERR_OFFSET,
+    CLOSE_FILE_ERROR,
+    LOAD_FILE_ERROR,
+    FILE_PARSER_ERROR,
+    ITEM_SIZE_IS_NULL,
     TEL_PROFILE_UTIL_IS_NULL,
     PDP_PROFILE_VERSION_IS_NULL,
     PDP_PROFILE_VERSION_IS_OLD,
     OPERATOR_IS_NULL,
+    RESET_APN_FAIL,
+    DELETE_THIRTY_DATA_FAIL,
 };
 } // namespace Telephony
 } // namespace OHOS

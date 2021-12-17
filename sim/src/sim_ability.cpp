@@ -26,65 +26,66 @@ namespace OHOS {
 using AppExecFwk::AbilityLoader;
 using AppExecFwk::Ability;
 namespace Telephony {
-std::map<std::string, SimUriType> simUriMap = {
-    {"/sim/sim_info", SimUriType::SIM_INFO},
-    {"/sim/sim_info/set_card", SimUriType::SET_CARD}
-};
-
 void SimAbility::OnStart(const AppExecFwk::Want &want)
 {
-    DATA_STORAGE_LOGD("SimAbility::OnStart\n");
+    DATA_STORAGE_LOGI("SimAbility::OnStart\n");
     Ability::OnStart(want);
     std::string path = GetDatabaseDir();
     if (!path.empty()) {
+        initDatabaseDir = true;
         path.append("/");
         helper_.UpdateDbPath(path);
+        InitUriMap();
+        if (helper_.Init() == NativeRdb::E_OK) {
+            initRdbStore = true;
+        } else {
+            DATA_STORAGE_LOGE("SimAbility::OnStart rdb init fail!");
+            initRdbStore = false;
+        }
+    } else {
+        initDatabaseDir = false;
+        DATA_STORAGE_LOGE("SimAbility::OnStart##the databaseDir is empty\n");
     }
-    helper_.Init();
-    DATA_STORAGE_LOGD("SimAbility::OnStart ends##uri = %{public}s\n", path.c_str());
 }
 
 int SimAbility::Insert(const Uri &uri, const NativeRdb::ValuesBucket &value)
 {
+    if (!IsInitOk()) {
+        return DATA_STORAGE_ERROR;
+    }
     std::lock_guard<std::mutex> guard(lock_);
-    DATA_STORAGE_LOGD("SimAbility::Insert##uri = %{public}s\n", uri.ToString().c_str());
     Uri tempUri = uri;
     SimUriType simUriType = ParseUriType(tempUri);
-    int64_t id = TELEPHONY_ERROR;
-    switch (simUriType) {
-        case SimUriType::SIM_INFO: {
-            helper_.Insert(id, value, TABLE_SIM_INFO);
-            break;
-        }
-        default:
-            break;
+    int64_t id = DATA_STORAGE_ERROR;
+    if (simUriType == SimUriType::SIM_INFO) {
+        helper_.Insert(id, value, TABLE_SIM_INFO);
+    } else {
+        DATA_STORAGE_LOGI("SimAbility::Insert##uri = %{public}s\n", uri.ToString().c_str());
     }
-    DATA_STORAGE_LOGD("SimAbility::Insert end##id = %{public}" PRId64 "\n", id);
     return id;
 }
 
 std::shared_ptr<NativeRdb::AbsSharedResultSet> SimAbility::Query(
     const Uri &uri, const std::vector<std::string> &columns, const NativeRdb::DataAbilityPredicates &predicates)
 {
-    DATA_STORAGE_LOGD("SimAbility::Query##uri = %{public}s\n", uri.ToString().c_str());
+    std::unique_ptr<NativeRdb::AbsSharedResultSet> resultSet;
+    if (!IsInitOk()) {
+        return resultSet;
+    }
     Uri tempUri = uri;
     SimUriType simUriType = ParseUriType(tempUri);
-    NativeRdb::AbsRdbPredicates *absRdbPredicates = nullptr;
-    std::unique_ptr<NativeRdb::AbsSharedResultSet> resultSet;
-    switch (simUriType) {
-        case SimUriType::SIM_INFO: {
-            absRdbPredicates = new NativeRdb::AbsRdbPredicates(TABLE_SIM_INFO);
-            break;
+    if (simUriType == SimUriType::SIM_INFO) {
+        auto *absRdbPredicates = new NativeRdb::AbsRdbPredicates(TABLE_SIM_INFO);
+        if (absRdbPredicates != nullptr) {
+            ConvertPredicates(predicates, absRdbPredicates);
+            resultSet = helper_.Query(*absRdbPredicates, columns);
+            free(absRdbPredicates);
+            absRdbPredicates = nullptr;
+        } else {
+            DATA_STORAGE_LOGE("SimAbility::Update  NativeRdb::AbsRdbPredicates is null!");
         }
-        default:
-            break;
-    }
-    if (absRdbPredicates != nullptr) {
-        DataAbilityPredicatesConvertAbsRdbPredicates(predicates, absRdbPredicates);
-        PrintfAbsRdbPredicates(absRdbPredicates);
-        resultSet = helper_.Query(*absRdbPredicates, columns);
-        free(absRdbPredicates);
-        DATA_STORAGE_LOGD("SimAbility::Query ------ ");
+    } else {
+        DATA_STORAGE_LOGI("SimAbility::Query##uri = %{public}s\n", uri.ToString().c_str());
     }
     return resultSet;
 }
@@ -92,93 +93,123 @@ std::shared_ptr<NativeRdb::AbsSharedResultSet> SimAbility::Query(
 int SimAbility::Update(
     const Uri &uri, const NativeRdb::ValuesBucket &value, const NativeRdb::DataAbilityPredicates &predicates)
 {
+    int result = DATA_STORAGE_ERROR;
+    if (!IsInitOk()) {
+        return result;
+    }
     std::lock_guard<std::mutex> guard(lock_);
-    DATA_STORAGE_LOGD("SimAbility::Update##uri = %{public}s\n", uri.ToString().c_str());
     Uri tempUri = uri;
     SimUriType simUriType = ParseUriType(tempUri);
-    int result = TELEPHONY_ERROR;
-    NativeRdb::AbsRdbPredicates *absRdbPredicates = nullptr;
     switch (simUriType) {
         case SimUriType::SIM_INFO: {
-            absRdbPredicates = new NativeRdb::AbsRdbPredicates(TABLE_SIM_INFO);
+            auto *absRdbPredicates = new NativeRdb::AbsRdbPredicates(TABLE_SIM_INFO);
+            if (absRdbPredicates != nullptr) {
+                int changedRows = 0;
+                ConvertPredicates(predicates, absRdbPredicates);
+                result = helper_.Update(changedRows, value, *absRdbPredicates);
+                free(absRdbPredicates);
+                absRdbPredicates = nullptr;
+            } else {
+                DATA_STORAGE_LOGE("SimAbility::Update  NativeRdb::AbsRdbPredicates is null!");
+            }
             break;
         }
         case SimUriType::SET_CARD: {
-            if (!value.HasColumn(SimData::SIM_ID) || !value.HasColumn(SimData::CARD_TYPE)) {
-                break;
-            }
-            NativeRdb::ValueObject valueObject;
-            bool isExistSimId = value.GetObject(SimData::SIM_ID, valueObject);
-            if (!isExistSimId) {
-                break;
-            }
-            int simId;
-            valueObject.GetInt(simId);
-
-            bool isExistCardType = value.GetObject(SimData::CARD_TYPE, valueObject);
-            if (!isExistCardType) {
-                break;
-            }
-            int cardType;
-            valueObject.GetInt(cardType);
-            result = helper_.SetDefaultCardByType(simId, cardType);
+            result = SetCard(value);
             break;
         }
         default:
+            DATA_STORAGE_LOGI("SimAbility::Update##uri = %{public}s\n", uri.ToString().c_str());
             break;
     }
-    if (absRdbPredicates != nullptr) {
-        int changedRows;
-        DataAbilityPredicatesConvertAbsRdbPredicates(predicates, absRdbPredicates);
-        PrintfAbsRdbPredicates(absRdbPredicates);
-        result = helper_.Update(changedRows, value, *absRdbPredicates);
-        free(absRdbPredicates);
-        DATA_STORAGE_LOGD(
-            "SimAbility::Update##result = %{public}d, changedRows = %{public}d\n", result, changedRows);
+    return result;
+}
+
+int SimAbility::SetCard(const NativeRdb::ValuesBucket &value)
+{
+    int result = DATA_STORAGE_ERROR;
+    if (!value.HasColumn(SimData::SIM_ID)) {
+        DATA_STORAGE_LOGE("SimAbility::Update##the sim_id in valuesBucket does not exist");
+        return result;
     }
-    DATA_STORAGE_LOGD("SimAbility::Update end##result = %{public}d\n", result);
+    if (!value.HasColumn(SimData::CARD_TYPE)) {
+        DATA_STORAGE_LOGE("SimAbility::Update##the card_type in valuesBucket does not exist");
+        return result;
+    }
+    NativeRdb::ValueObject valueObject;
+    bool isExistSimId = value.GetObject(SimData::SIM_ID, valueObject);
+    if (!isExistSimId) {
+        DATA_STORAGE_LOGE("SimAbility::Update##failed to get sim_id value in valuesBucket");
+        return result;
+    }
+    int simId = 0;
+    valueObject.GetInt(simId);
+
+    bool isExistCardType = value.GetObject(SimData::CARD_TYPE, valueObject);
+    if (!isExistCardType) {
+        DATA_STORAGE_LOGE("SimAbility::Update##failed to get card_type value in valuesBucket");
+        return result;
+    }
+    int cardType = 0;
+    valueObject.GetInt(cardType);
+    result = helper_.SetDefaultCardByType(simId, cardType);
     return result;
 }
 
 int SimAbility::Delete(const Uri &uri, const NativeRdb::DataAbilityPredicates &predicates)
 {
+    int result = DATA_STORAGE_ERROR;
+    if (!IsInitOk()) {
+        return result;
+    }
     std::lock_guard<std::mutex> guard(lock_);
-    DATA_STORAGE_LOGD("SimAbility::Delete##uri = %{public}s\n", uri.ToString().c_str());
     Uri tempUri = uri;
     SimUriType simUriType = ParseUriType(tempUri);
-    int result = TELEPHONY_ERROR;
-    NativeRdb::AbsRdbPredicates *absRdbPredicates = nullptr;
-    switch (simUriType) {
-        case SimUriType::SIM_INFO: {
-            absRdbPredicates = new NativeRdb::AbsRdbPredicates(TABLE_SIM_INFO);
-            break;
+    if (simUriType == SimUriType::SIM_INFO) {
+        auto *absRdbPredicates = new NativeRdb::AbsRdbPredicates(TABLE_SIM_INFO);
+        if (absRdbPredicates != nullptr) {
+            ConvertPredicates(predicates, absRdbPredicates);
+            int deletedRows = 0;
+            result = helper_.Delete(deletedRows, *absRdbPredicates);
+            free(absRdbPredicates);
+            absRdbPredicates = nullptr;
+        } else {
+            DATA_STORAGE_LOGE("SimAbility::Update  NativeRdb::AbsRdbPredicates is null!");
         }
-        default:
-            break;
+    } else {
+        DATA_STORAGE_LOGI("SimAbility::Delete##uri = %{public}s\n", uri.ToString().c_str());
     }
-    if (absRdbPredicates != nullptr) {
-        DataAbilityPredicatesConvertAbsRdbPredicates(predicates, absRdbPredicates);
-        PrintfAbsRdbPredicates(absRdbPredicates);
-        int deletedRows;
-        result = helper_.Delete(deletedRows, *absRdbPredicates);
-        DATA_STORAGE_LOGD(
-            "SimAbility::Delete##result = %{public}d, deletedRows = %{public}d\n", result, deletedRows);
-        free(absRdbPredicates);
-    }
-    DATA_STORAGE_LOGD("SimAbility::Delete end##result = %{public}d\n", result);
     return result;
+}
+
+bool SimAbility::IsInitOk()
+{
+    if (!initDatabaseDir) {
+        DATA_STORAGE_LOGE("SimAbility::IsInitOk initDatabaseDir failed!");
+    } else if (!initRdbStore) {
+        DATA_STORAGE_LOGE("SimAbility::IsInitOk initRdbStore failed!");
+    };
+    return initDatabaseDir && initRdbStore;
+}
+
+void SimAbility::InitUriMap()
+{
+    simUriMap = {
+        {"/sim/sim_info", SimUriType::SIM_INFO},
+        {"/sim/sim_info/set_card", SimUriType::SET_CARD}
+    };
 }
 
 std::string SimAbility::GetType(const Uri &uri)
 {
-    DATA_STORAGE_LOGD("SimAbility::GetType##uri = %{public}s\n", uri.ToString().c_str());
+    DATA_STORAGE_LOGI("SimAbility::GetType##uri = %{public}s\n", uri.ToString().c_str());
     std::string retval(uri.ToString());
     return retval;
 }
 
 int SimAbility::OpenFile(const Uri &uri, const std::string &mode)
 {
-    DATA_STORAGE_LOGD("SimAbility::OpenFile##uri = %{public}s\n", uri.ToString().c_str());
+    DATA_STORAGE_LOGI("SimAbility::OpenFile##uri = %{public}s\n", uri.ToString().c_str());
     Uri tempUri = uri;
     SimUriType simUriType = ParseUriType(tempUri);
     return static_cast<int>(simUriType);
@@ -186,7 +217,7 @@ int SimAbility::OpenFile(const Uri &uri, const std::string &mode)
 
 SimUriType SimAbility::ParseUriType(Uri &uri)
 {
-    DATA_STORAGE_LOGD("SimAbility::ParseUriType start\n");
+    DATA_STORAGE_LOGI("SimAbility::ParseUriType start\n");
     SimUriType simUriType = SimUriType::UNKNOW;
     std::string uriPath = uri.ToString();
     if (!uriPath.empty()) {
@@ -194,46 +225,18 @@ SimUriType SimAbility::ParseUriType(Uri &uri)
         Uri tempUri(uriPath);
         std::string path = tempUri.GetPath();
         if (!path.empty()) {
-            DATA_STORAGE_LOGD("SimAbility::ParseUriType##path = %{public}s\n", path.c_str());
+            DATA_STORAGE_LOGI("SimAbility::ParseUriType##path = %{public}s\n", path.c_str());
             std::map<std::string, SimUriType>::iterator it = simUriMap.find(path);
             if (it != simUriMap.end()) {
                 simUriType = it->second;
-                DATA_STORAGE_LOGD("SimAbility::ParseUriType##simUriType = %{public}d\n", simUriType);
+                DATA_STORAGE_LOGI("SimAbility::ParseUriType##simUriType = %{public}d\n", simUriType);
             }
         }
     }
     return simUriType;
 }
 
-void SimAbility::PrintfAbsRdbPredicates(const NativeRdb::AbsRdbPredicates *predicates)
-{
-    std::string whereClause = predicates->GetWhereClause();
-    DATA_STORAGE_LOGD("SimAbility::PrintfAbsRdbPredicates##whereClause = %{public}s\n", whereClause.c_str());
-    std::vector<std::string> whereArgs = predicates->GetWhereArgs();
-    int32_t size = whereArgs.size();
-    for (int i = 0; i < size; ++i) {
-        DATA_STORAGE_LOGD("SimAbility::PrintfAbsRdbPredicates##index = %{public}d, whereArgs = %{public}s\n", i,
-            whereArgs[i].c_str());
-    }
-    std::string order = predicates->GetOrder();
-    DATA_STORAGE_LOGD("SimAbility::PrintfAbsRdbPredicates##order = %{public}s\n", order.c_str());
-    int limit = predicates->GetLimit();
-    DATA_STORAGE_LOGD("SimAbility::PrintfAbsRdbPredicates##limit = %{public}d\n", limit);
-    int offset = predicates->GetOffset();
-    DATA_STORAGE_LOGD("SimAbility::PrintfAbsRdbPredicates##offset = %{public}d\n", offset);
-    bool isDistinct = predicates->IsDistinct();
-    DATA_STORAGE_LOGD("SimAbility::PrintfAbsRdbPredicates##isDistinct = %{public}d\n", isDistinct);
-    std::string group = predicates->GetGroup();
-    DATA_STORAGE_LOGD("SimAbility::PrintfAbsRdbPredicates##Group = %{public}s\n", group.c_str());
-    std::string index = predicates->GetIndex();
-    DATA_STORAGE_LOGD("SimAbility::PrintfAbsRdbPredicates##Index = %{public}s\n", index.c_str());
-    bool isNeedAnd = predicates->IsNeedAnd();
-    DATA_STORAGE_LOGD("SimAbility::PrintfAbsRdbPredicates##isNeedAnd = %{public}d\n", isNeedAnd);
-    bool isSorted = predicates->IsSorted();
-    DATA_STORAGE_LOGD("SimAbility::PrintfAbsRdbPredicates##isSorted = %{public}d\n", isSorted);
-}
-
-void SimAbility::DataAbilityPredicatesConvertAbsRdbPredicates(
+void SimAbility::ConvertPredicates(
     const NativeRdb::DataAbilityPredicates &dataPredicates, NativeRdb::AbsRdbPredicates *absRdbPredicates)
 {
     NativeRdb::PredicatesUtils::SetWhereClauseAndArgs(
