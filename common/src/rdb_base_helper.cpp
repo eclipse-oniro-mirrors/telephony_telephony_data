@@ -15,9 +15,7 @@
 
 #include "rdb_base_helper.h"
 
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <regex>
 
 namespace OHOS {
 namespace Telephony {
@@ -121,9 +119,8 @@ int RdbBaseHelper::IsExistStore()
 void RdbBaseHelper::CreateRdbStore(
     const NativeRdb::RdbStoreConfig &config, int version, NativeRdb::RdbOpenCallback &openCallback, int &errCode)
 {
-    DATA_STORAGE_LOGE("RdbBaseHelper::CreateRdbStore");
+    DATA_STORAGE_LOGI("RdbBaseHelper::CreateRdbStore");
     store_ = NativeRdb::RdbHelper::GetRdbStore(config, version, openCallback, errCode);
-    IsExistStore();
 }
 
 int RdbBaseHelper::BeginTransaction()
@@ -153,33 +150,14 @@ int RdbBaseHelper::EndTransaction()
     return ret;
 }
 
-void RdbBaseHelper::FolderExists()
-{
-    if (!access("/data/", F_OK | R_OK | W_OK)) {
-        DATA_STORAGE_LOGD("RdbSimHelper::FolderExists  access\n");
-        if (access(FOLDER_PATH.c_str(), F_OK) != 0) {
-            mode_t FILE_MODE = 0777;
-            int ret = mkdir(FOLDER_PATH.c_str(), FILE_MODE);
-            DATA_STORAGE_LOGD("RdbSimHelper::FolderExists access ret = %{public}d\n", ret);
-        }
-    }
-}
 int RdbBaseHelper::BatchInsert(int64_t &id, const NativeRdb::ValuesBucket &initialValues, const std::string &table)
 {
-    return 0;
+    return NativeRdb::E_OK;
 }
 
 void RdbBaseHelper::ReplaceAllStr(std::string &path, const std::string &oldStr, const std::string &newStr)
 {
-    std::string::size_type pos(0);
-    while (true) {
-        pos = path.find(oldStr);
-        if (pos != std::string::npos) {
-            path.replace(pos, oldStr.length(), newStr);
-        } else {
-            break;
-        }
-    }
+    path = std::regex_replace(path, std::regex(oldStr), newStr);
 }
 } // namespace Telephony
 } // namespace OHOS

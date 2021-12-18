@@ -87,7 +87,9 @@ public:
 class MmsPart {
 public:
     static constexpr const char *ID = "id";
-    static constexpr const char *INDEX = "index_";
+    static constexpr const char *PART_INDEX = "part_index";
+    static constexpr const char *PART_SIZE = "part_size";
+    static constexpr const char *RECORDING_TIME = "recording_time";
     static constexpr const char *TYPE = "type";
     static constexpr const char *LOCATION_PATH = "location_path";
     static constexpr const char *STATE = "state";

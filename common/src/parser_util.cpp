@@ -18,7 +18,8 @@
 #include <cstdio>
 #include <cstring>
 
-#include "data_storage_errors.h"
+#include <climits>
+
 #include "preferences_util.h"
 #include "data_storage_log_wrapper.h"
 
@@ -29,7 +30,7 @@ int ParserUtil::ParserPdpProfileJson(std::vector<PdpProfile> &vec)
 {
     char *content;
     int ret = LoaderJsonFile(content);
-    if (ret != TELEPHONY_SUCCESS) {
+    if (ret != DATA_STORAGE_SUCCESS) {
         DATA_STORAGE_LOGE("ParserUtil::ParserPdpProfileJson LoaderJsonFile is fail!\n");
         return ret;
     }
@@ -41,31 +42,32 @@ int ParserUtil::ParserPdpProfileJson(std::vector<PdpProfile> &vec)
     Json::CharReader* reader(builder.newCharReader());
     if (!reader->parse(rawJson.c_str(), rawJson.c_str() + contentLength, &root, &err)) {
         DATA_STORAGE_LOGE("ParserUtil::ParserPdpProfileJson reader is error!\n");
-        return TELEPHONY_ERROR;
+        return static_cast<int>(LoadProFileErrorType::FILE_PARSER_ERROR);
     }
     delete reader;
     const int apnVersion = root[ITEM_VERSION].asInt();
     PreferencesUtil *utils = DelayedSingleton<PreferencesUtil>::GetInstance().get();
     if (utils == nullptr) {
         DATA_STORAGE_LOGE("ParserUtil::ParserPdpProfileJson utils is nullptr!\n");
-        return TEL_PROFILE_UTIL_IS_NULL;
+        return static_cast<int>(LoadProFileErrorType::TEL_PROFILE_UTIL_IS_NULL);
     }
-    int profileVersion = utils->ObtainInt("pdp_version", 0);
+    int profileVersion = utils->ObtainInt(APN_VERSION, 0);
     if (apnVersion <= profileVersion) {
         DATA_STORAGE_LOGE("ParserUtil::ParserPdpProfileJson apnVersion <= profileVersion!\n");
-        return PDP_PROFILE_VERSION_IS_OLD;
+        return static_cast<int>(LoadProFileErrorType::PDP_PROFILE_VERSION_IS_OLD);
     }
     Json::Value itemRoots = root[ITEM_OPERATOR_INFOS];
     if (itemRoots.size() == 0) {
         DATA_STORAGE_LOGE("ParserUtil::ParserPdpProfileJson itemRoots size == 0!\n");
-        return TELEPHONY_ERROR;
+        return static_cast<int>(LoadProFileErrorType::ITEM_SIZE_IS_NULL);
     }
     ParserPdpProfileInfos(vec, itemRoots);
-    ret = utils->SaveInt("pdp_version", apnVersion);
+    ret = utils->SaveInt(APN_VERSION, apnVersion);
     if (ret == NativePreferences::E_OK) {
         utils->Refresh();
+        ret = DATA_STORAGE_SUCCESS;
     }
-    DATA_STORAGE_LOGD("ParserUtil::ParserPdpProfileJson##apnVersion = %{public}d\n", apnVersion);
+    DATA_STORAGE_LOGI("ParserUtil::ParserPdpProfileJson##apnVersion = %{public}d\n", apnVersion);
     return ret;
 }
 
@@ -99,6 +101,9 @@ void ParserUtil::ParserPdpProfileToValuesBucket(NativeRdb::ValuesBucket &value, 
     value.PutString(PdpProfileData::PROFILE_NAME, bean.profileName);
     value.PutString(PdpProfileData::MCC, bean.mcc);
     value.PutString(PdpProfileData::MNC, bean.mnc);
+    std::string mccmnc(bean.mcc);
+    mccmnc.append(bean.mnc);
+    value.PutString(PdpProfileData::MCCMNC, mccmnc);
     value.PutString(PdpProfileData::APN, bean.apn);
     value.PutInt(PdpProfileData::AUTH_TYPE, bean.authType);
     value.PutString(PdpProfileData::AUTH_USER, bean.authUser);
@@ -112,36 +117,52 @@ void ParserUtil::ParserPdpProfileToValuesBucket(NativeRdb::ValuesBucket &value, 
     value.PutString(PdpProfileData::APN_ROAM_PROTOCOL, bean.roamPdpProtocol);
 }
 
-int ParserUtil::LoaderJsonFile(char *&content)
+int ParserUtil::LoaderJsonFile(char *&content) const
 {
-    long len;
+    size_t len = 0;
     FILE *f = fopen(PATH, "rb");
     if (f == nullptr) {
-        return OPEN_FILE_ERROR;
+        DATA_STORAGE_LOGE("ParserUtil::LoaderJsonFile file is null!\n");
+        return static_cast<int>(LoadProFileErrorType::OPEN_FILE_ERROR);
     }
     int ret_seek_end = fseek(f, 0, SEEK_END);
     if (ret_seek_end != 0) {
-        return OPEN_FILE_ERROR;
+        DATA_STORAGE_LOGE("ParserUtil::LoaderJsonFile ret_seek_end != 0!\n");
+        CloseFile(f);
+        return static_cast<int>(LoadProFileErrorType::LOAD_FILE_ERROR);
     }
     len = ftell(f);
     int ret_seek_set = fseek(f, 0, SEEK_SET);
     if (ret_seek_set != 0) {
-        return OPEN_FILE_ERROR;
+        DATA_STORAGE_LOGE("ParserUtil::LoaderJsonFile ret_seek_set != 0!\n");
+        CloseFile(f);
+        return static_cast<int>(LoadProFileErrorType::LOAD_FILE_ERROR);
     }
-    len++;
-    if (len <= 0 || len > LONG_MAX) {
-        return OPEN_FILE_ERROR;
+    if (len <= 0 || len > ULONG_MAX) {
+        DATA_STORAGE_LOGE("ParserUtil::LoaderJsonFile len <= 0 or len > LONG_MAX!\n");
+        CloseFile(f);
+        return static_cast<int>(LoadProFileErrorType::LOAD_FILE_ERROR);
     }
     content = (char *)malloc(len);
-    int ret_read = fread(content, 1, len, f);
+    size_t ret_read = fread(content, 1, len, f);
     if (ret_read != len) {
-        return OPEN_FILE_ERROR;
+        DATA_STORAGE_LOGE("ParserUtil::LoaderJsonFile ret_read != len!\n");
+        CloseFile(f);
+        return static_cast<int>(LoadProFileErrorType::LOAD_FILE_ERROR);
     }
+    return CloseFile(f);
+}
+
+int ParserUtil::CloseFile(FILE *f) const
+{
     int ret_close = fclose(f);
+    free(f);
+    f = nullptr;
     if (ret_close != 0) {
-        return OPEN_FILE_ERROR;
+        DATA_STORAGE_LOGE("ParserUtil::LoaderJsonFile ret_close != 0!\n");
+        return static_cast<int>(LoadProFileErrorType::CLOSE_FILE_ERROR);
     }
-    return TELEPHONY_SUCCESS;
+    return DATA_STORAGE_SUCCESS;
 }
 } // namespace Telephony
 } // namespace OHOS

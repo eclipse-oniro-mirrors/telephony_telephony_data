@@ -24,6 +24,7 @@
 #include "uri.h"
 #include "sim_data.h"
 #include "sms_mms_data.h"
+#include "pdp_profile_data.h"
 #include "data_storage_log_wrapper.h"
 
 namespace OHOS {
@@ -31,9 +32,14 @@ namespace Telephony {
 using CmdProcessFunc = int (*)(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper);
 std::map<char, CmdProcessFunc> g_simFuncMap;
 std::map<char, CmdProcessFunc> g_smsFuncMap;
-std::shared_ptr<AppExecFwk::DataAbilityHelper> CreateDataAHelper(int32_t systemAbilityId)
+std::map<char, CmdProcessFunc> g_pdpProfileFuncMap;
+std::shared_ptr<AppExecFwk::DataAbilityHelper> simDataAbilityHelper = nullptr;
+std::shared_ptr<AppExecFwk::DataAbilityHelper> smsDataAbilityHelper = nullptr;
+std::shared_ptr<AppExecFwk::DataAbilityHelper> pdpProfileDataAbilityHelper = nullptr;
+std::shared_ptr<AppExecFwk::DataAbilityHelper> CreateDataAHelper(
+    int32_t systemAbilityId, std::shared_ptr<Uri> dataAbilityUri)
 {
-    DATA_STORAGE_LOGD("DataSimRdbHelper::CreateDataAHelper");
+    DATA_STORAGE_LOGI("DataSimRdbHelper::CreateDataAHelper ");
     auto saManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (saManager == nullptr) {
         DATA_STORAGE_LOGE("DataSimRdbHelper Get system ability mgr failed.");
@@ -44,17 +50,34 @@ std::shared_ptr<AppExecFwk::DataAbilityHelper> CreateDataAHelper(int32_t systemA
         DATA_STORAGE_LOGE("DataSimRdbHelper GetSystemAbility Service Failed.");
         return nullptr;
     }
-    return AppExecFwk::DataAbilityHelper::Creator(remoteObj);
+    return AppExecFwk::DataAbilityHelper::Creator(remoteObj, dataAbilityUri);
 }
 
 std::shared_ptr<AppExecFwk::DataAbilityHelper> CreateSimHelper()
 {
-    return CreateDataAHelper(TELEPHONY_CORE_SERVICE_SYS_ABILITY_ID);
+    if (simDataAbilityHelper == nullptr) {
+        std::shared_ptr<Uri> dataAbilityUri = std::make_shared<Uri>(SIM_URI);
+        simDataAbilityHelper = CreateDataAHelper(TELEPHONY_CORE_SERVICE_SYS_ABILITY_ID, dataAbilityUri);
+    }
+    return simDataAbilityHelper;
 }
 
 std::shared_ptr<AppExecFwk::DataAbilityHelper> CreateSmsHelper()
 {
-    return CreateDataAHelper(TELEPHONY_SMS_MMS_SYS_ABILITY_ID);
+    if (smsDataAbilityHelper == nullptr) {
+        std::shared_ptr<Uri> dataAbilityUri = std::make_shared<Uri>(SMS_MMS_URI);
+        smsDataAbilityHelper = CreateDataAHelper(TELEPHONY_SMS_MMS_SYS_ABILITY_ID, dataAbilityUri);
+    }
+    return smsDataAbilityHelper;
+}
+
+std::shared_ptr<AppExecFwk::DataAbilityHelper> CreatePdpProfileHelper()
+{
+    if (pdpProfileDataAbilityHelper == nullptr) {
+        std::shared_ptr<Uri> dataAbilityUri = std::make_shared<Uri>(PDP_PROFILE_URI);
+        pdpProfileDataAbilityHelper = CreateDataAHelper(TELEPHONY_SMS_MMS_SYS_ABILITY_ID, dataAbilityUri);
+    }
+    return pdpProfileDataAbilityHelper;
 }
 
 int SimInsert(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
@@ -64,8 +87,6 @@ int SimInsert(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
     value.PutInt(SimData::SIM_ID, 1);
     value.PutInt(SimData::SLOT_INDEX, 1);
     value.PutString(SimData::PHONE_NUMBER, "134xxxxxxxx");
-    value.PutString(SimData::ICC_ID, "icc_id");
-    value.PutString(SimData::CARD_ID, "card_id");
     return helper->Insert(uri, value);
 }
 
@@ -109,7 +130,6 @@ int SmsInsert(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
     value.PutString(SmsMmsInfo::RECEIVER_NUMBER, "134xxxxxxxx");
     value.PutString(SmsMmsInfo::MSG_CONTENT, "The first test text message content");
     value.PutInt(SmsMmsInfo::GROUP_ID, 1);
-    value.PutInt(SmsMmsInfo::IS_SENDER, 0);
     return helper->Insert(uri, value);
 }
 
@@ -145,7 +165,35 @@ int SmsDelete(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
     return helper->Delete(uri, predicates);
 }
 
-int PdpSelect(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
+int PdpProfileInsert(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
+{
+    Uri uri("dataability:///com.ohos.smsmmsability/sms_mms/sms_mms_info");
+    NativeRdb::ValuesBucket value;
+    value.PutString(PdpProfileData::PROFILE_NAME, "frist_profile_name");
+    value.PutString(PdpProfileData::MCC, "460");
+    value.PutString(PdpProfileData::MNC, "91");
+    return helper->Insert(uri, value);
+}
+
+int PdpProfileUpdate(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
+{
+    Uri uri("dataability:///com.ohos.pdpprofileability/net/pdp_profile");
+    NativeRdb::ValuesBucket values;
+    values.PutString(PdpProfileData::PROFILE_NAME, "update_profile_name");
+    NativeRdb::DataAbilityPredicates predicates;
+    predicates.EqualTo(PdpProfileData::PROFILE_ID, "1");
+    return helper->Update(uri, values, predicates);
+}
+
+int PdpProfileDelete(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
+{
+    Uri uri("dataability:///com.ohos.pdpprofileability/net/pdp_profile");
+    NativeRdb::DataAbilityPredicates predicates;
+    predicates.EqualTo(PdpProfileData::PROFILE_ID, "1");
+    return helper->Delete(uri, predicates);
+}
+
+int PdpProfileSelect(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
 {
     Uri uri("dataability:///com.ohos.pdpprofileability/net/pdp_profile");
     std::vector<std::string> colume;
@@ -169,7 +217,10 @@ void Init()
     g_smsFuncMap['y'] = SmsUpdate;
     g_smsFuncMap['u'] = SmsSelect;
     g_smsFuncMap['i'] = SmsDelete;
-    g_smsFuncMap['o'] = PdpSelect;
+    g_pdpProfileFuncMap['a'] = PdpProfileInsert;
+    g_pdpProfileFuncMap['s'] = PdpProfileUpdate;
+    g_pdpProfileFuncMap['d'] = PdpProfileDelete;
+    g_pdpProfileFuncMap['f'] = PdpProfileSelect;
 }
 
 int VerifyCmd(char inputCMD, std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper)
@@ -179,7 +230,9 @@ int VerifyCmd(char inputCMD, std::shared_ptr<AppExecFwk::DataAbilityHelper> &hel
         auto memberFunc = itFunSim->second;
         if (memberFunc != nullptr) {
             helper = CreateSimHelper();
-            (*memberFunc)(helper);
+            if (helper != nullptr) {
+                (*memberFunc)(helper);
+            }
             return 0;
         }
     }
@@ -188,7 +241,20 @@ int VerifyCmd(char inputCMD, std::shared_ptr<AppExecFwk::DataAbilityHelper> &hel
         auto memberFunc = itFunSms->second;
         if (memberFunc != nullptr) {
             helper = CreateSmsHelper();
-            (*memberFunc)(helper);
+            if (helper != nullptr) {
+                (*memberFunc)(helper);
+            }
+            return 0;
+        }
+    }
+    auto itFunPdpProfile = g_pdpProfileFuncMap.find(inputCMD);
+    if (itFunPdpProfile != g_pdpProfileFuncMap.end()) {
+        auto memberFunc = itFunPdpProfile->second;
+        if (memberFunc != nullptr) {
+            helper = CreatePdpProfileHelper();
+            if (helper != nullptr) {
+                (*memberFunc)(helper);
+            }
             return 0;
         }
     }
@@ -208,7 +274,10 @@ void PrintfHint()
         "y:SmsUpdate()\n"
         "u:SmsSelect()\n"
         "i:SmsDelete()\n"
-        "o:PdpSelect()\n"
+        "a:PdpProfileInsert()\n"
+        "s:PdpProfileUpdate()\n"
+        "d:PdpProfileDelete()\n"
+        "f:PdpProfileSelect()\n"
         "z:exit\n"
         "***********************************\n"
         "your choice: ");
@@ -225,16 +294,9 @@ void Looper()
         std::cin >> inputCMD;
         int ret = VerifyCmd(inputCMD, helper);
         if (ret == 0) {
-            return;
+            continue;
         }
         switch (inputCMD) {
-            case 'o': {
-                helper = CreateSmsHelper();
-                if (helper != nullptr) {
-                    PdpSelect(helper);
-                }
-                break;
-            }
             case 'z': {
                 loopFlag = false;
                 break;

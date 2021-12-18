@@ -144,7 +144,6 @@ The following provides the procedure and sample code for you to query, insert, d
    ```
    std::shared_ptr<AppExecFwk::DataAbilityHelper> CreateDataAHelper(int32_t systemAbilityId)
    {
-       DATA_STORAGE_LOGD("DataSimRdbHelper::CreateDataAHelper");
        // Obtain a SystemAbilityManager instance through SystemAbilityManagerClient.
        auto saManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
        if (saManager == nullptr) {

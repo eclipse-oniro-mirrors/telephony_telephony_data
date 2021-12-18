@@ -23,26 +23,71 @@ namespace OHOS {
 namespace Telephony {
 class RdbSimHelper : public RdbBaseHelper {
 public:
-    enum { MAIN = 0, MESSAGE, CELLULAR_DATA };
+    enum class SimCardType {
+        MAIN = 0, MESSAGE, CELLULAR_DATA
+    };
 
     RdbSimHelper();
     ~RdbSimHelper() = default;
 
+    /**
+     * Update dataBase path
+     *
+     * @param path path
+     */
     void UpdateDbPath(const std::string &path);
+
+    /**
+     * Clear sim_info table data
+     * @return 0 is succeed else failed
+     */
     int32_t ClearData();
-    void Init();
+
+    /**
+     * Init dataBase
+     *
+     * @return 0 is succeed else failed
+     */
+    int Init();
+
+    /**
+     * Set default card by card type
+     *
+     * @param simId  simId
+     * @param type card type
+     * @return 0 is succeed else failed
+     */
     int32_t SetDefaultCardByType(int32_t simId, int32_t type);
 
 private:
+    /**
+     * Create SimInfo table
+     *
+     * @param createTableStr Create table statement
+     */
     void CreateSimInfoTableStr(std::string &createTableStr);
+
+    /**
+     * Update sim_info table card state by card type
+     *
+     * @param type card type
+     * @param updateState Updated value that is 0 or 1
+     * @param whereSate Previous value
+     * @return 0 is succeed else failed
+     */
     int32_t UpdateCardStateByType(int32_t type, int32_t updateState, int32_t whereSate);
-    void EndTransactionAction();
+
+    /**
+     * End the transaction action
+     *
+     * @return 0 is succeed else failed
+     */
+    int EndTransactionAction();
 
 private:
     const std::string DB_NAME = "sim.db";
     std::string dbPath_ = FOLDER_PATH + DB_NAME;
-    int errCode_ = NativeRdb::E_OK;
-    int version_ = 1;
+    const int VERSION = 1;
 };
 } // namespace Telephony
 } // namespace OHOS

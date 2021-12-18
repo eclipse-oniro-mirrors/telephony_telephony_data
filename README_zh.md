@@ -144,7 +144,6 @@
    ```
    std::shared_ptr<AppExecFwk::DataAbilityHelper> CreateDataAHelper(int32_t systemAbilityId)
    {
-       DATA_STORAGE_LOGD("DataSimRdbHelper::CreateDataAHelper");
        //通过SystemAbilityManagerClient获得SystemAbilityManager
        auto saManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
        if (saManager == nullptr) {

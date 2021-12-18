@@ -26,66 +26,67 @@ namespace OHOS {
 using AppExecFwk::AbilityLoader;
 using AppExecFwk::Ability;
 namespace Telephony {
-std::map<std::string, PdpProfileUriType> pdpProfileUriMap = {
-    {"/net/pdp_profile", PdpProfileUriType::PDP_PROFILE},
-    {"/net/pdp_profile/reset", PdpProfileUriType::RESET}
-};
-
 void PdpProfileAbility::OnStart(const AppExecFwk::Want &want)
 {
-    DATA_STORAGE_LOGD("PdpProfileAbility::OnStart\n");
+    DATA_STORAGE_LOGI("PdpProfileAbility::OnStart\n");
     Ability::OnStart(want);
     std::string path = GetDatabaseDir();
     if (!path.empty()) {
+        initDatabaseDir = true;
         path.append("/");
         helper_.UpdateDbPath(path);
+        InitUriMap();
+        int rdbInitCode = helper_.Init();
+        if (rdbInitCode == NativeRdb::E_OK) {
+            initRdbStore = true;
+        } else {
+            DATA_STORAGE_LOGE("PdpProfileAbility::OnStart rdb init fail!");
+            initRdbStore = false;
+        }
+    } else {
+        initDatabaseDir = false;
+        DATA_STORAGE_LOGE("PdpProfileAbility::OnStart##the databaseDir is empty!");
     }
-    helper_.Init();
-    DATA_STORAGE_LOGD("PdpProfileAbility::OnStart ends##uri = %{public}s\n", path.c_str());
 }
 
 int PdpProfileAbility::Insert(const Uri &uri, const NativeRdb::ValuesBucket &value)
 {
+    if (!IsInitOk()) {
+        return DATA_STORAGE_ERROR;
+    }
     std::lock_guard<std::mutex> guard(lock_);
-    DATA_STORAGE_LOGD("PdpProfileAbility::Insert##uri = %{public}s\n", uri.ToString().c_str());
     Uri tempUri = uri;
     PdpProfileUriType pdpProfileUriType = ParseUriType(tempUri);
-    int64_t id = TELEPHONY_ERROR;
-    switch (pdpProfileUriType) {
-        case PdpProfileUriType::PDP_PROFILE: {
-            helper_.Insert(id, value, TABLE_PDP_PROFILE);
-            DATA_STORAGE_LOGD("PdpProfileAbility::Insert SMS_MMS##id = %{public}" PRId64 "\n", id);
-            break;
-        }
-        default:
-            break;
+    int64_t id = DATA_STORAGE_ERROR;
+    if (pdpProfileUriType == PdpProfileUriType::PDP_PROFILE) {
+        helper_.Insert(id, value, TABLE_PDP_PROFILE);
+    } else {
+        DATA_STORAGE_LOGE("PdpProfileAbility::Insert##uri = %{public}s", uri.ToString().c_str());
     }
-    DATA_STORAGE_LOGD("PdpProfileAbility::Insert end##id = %{public}" PRId64 "\n", id);
     return id;
 }
 
 std::shared_ptr<NativeRdb::AbsSharedResultSet> PdpProfileAbility::Query(
     const Uri &uri, const std::vector<std::string> &columns, const NativeRdb::DataAbilityPredicates &predicates)
 {
-    DATA_STORAGE_LOGD("PdpProfileAbility::Query##uri = %{public}s\n", uri.ToString().c_str());
+    std::unique_ptr<NativeRdb::AbsSharedResultSet> resultSet;
+    if (!IsInitOk()) {
+        return resultSet;
+    }
     Uri tempUri = uri;
     PdpProfileUriType pdpProfileUriType = ParseUriType(tempUri);
-    NativeRdb::AbsRdbPredicates *absRdbPredicates = nullptr;
-    std::unique_ptr<NativeRdb::AbsSharedResultSet> resultSet;
-    switch (pdpProfileUriType) {
-        case PdpProfileUriType::PDP_PROFILE: {
-            absRdbPredicates = new NativeRdb::AbsRdbPredicates(TABLE_PDP_PROFILE);
-            break;
+    if (pdpProfileUriType == PdpProfileUriType::PDP_PROFILE) {
+        auto *absRdbPredicates = new NativeRdb::AbsRdbPredicates(TABLE_PDP_PROFILE);
+        if (absRdbPredicates != nullptr) {
+            ConvertPredicates(predicates, absRdbPredicates);
+            resultSet = helper_.Query(*absRdbPredicates, columns);
+            free(absRdbPredicates);
+            absRdbPredicates = nullptr;
+        } else {
+            DATA_STORAGE_LOGE("PdpProfileAbility::Delete  NativeRdb::AbsRdbPredicates is null!");
         }
-        default:
-            break;
-    }
-    if (absRdbPredicates != nullptr) {
-        DataAbilityPredicatesConvertAbsRdbPredicates(predicates, absRdbPredicates);
-        PrintfAbsRdbPredicates(absRdbPredicates);
-        resultSet = helper_.Query(*absRdbPredicates, columns);
-        free(absRdbPredicates);
-        DATA_STORAGE_LOGD("PdpProfileAbility::Query ------ ");
+    } else {
+        DATA_STORAGE_LOGE("PdpProfileAbility::Query##uri = %{public}s", uri.ToString().c_str());
     }
     return resultSet;
 }
@@ -93,11 +94,13 @@ std::shared_ptr<NativeRdb::AbsSharedResultSet> PdpProfileAbility::Query(
 int PdpProfileAbility::Update(
     const Uri &uri, const NativeRdb::ValuesBucket &value, const NativeRdb::DataAbilityPredicates &predicates)
 {
+    int result = DATA_STORAGE_ERROR;
+    if (!IsInitOk()) {
+        return result;
+    }
     std::lock_guard<std::mutex> guard(lock_);
-    DATA_STORAGE_LOGD("PdpProfileAbility::Update##uri = %{public}s\n", uri.ToString().c_str());
     Uri tempUri = uri;
     PdpProfileUriType pdpProfileUriType = ParseUriType(tempUri);
-    int result = TELEPHONY_ERROR;
     NativeRdb::AbsRdbPredicates *absRdbPredicates = nullptr;
     switch (pdpProfileUriType) {
         case PdpProfileUriType::PDP_PROFILE: {
@@ -105,64 +108,83 @@ int PdpProfileAbility::Update(
             break;
         }
         case PdpProfileUriType::RESET: {
-            helper_.ResetApn();
+            result = helper_.ResetApn();
+            if (result != NativeRdb::E_OK) {
+                DATA_STORAGE_LOGE("PdpProfileAbility::Update  ResetApn fail!");
+                result = static_cast<int>(LoadProFileErrorType::RESET_APN_FAIL);
+            }
             break;
         }
         default:
+            DATA_STORAGE_LOGE("PdpProfileAbility::Update##uri = %{public}s", uri.ToString().c_str());
             break;
     }
     if (absRdbPredicates != nullptr) {
-        int changedRows;
-        DataAbilityPredicatesConvertAbsRdbPredicates(predicates, absRdbPredicates);
-        PrintfAbsRdbPredicates(absRdbPredicates);
+        int changedRows = 0;
+        ConvertPredicates(predicates, absRdbPredicates);
         result = helper_.Update(changedRows, value, *absRdbPredicates);
         free(absRdbPredicates);
-        DATA_STORAGE_LOGD("PdpProfileAbility::Update##result = %{public}d, changedRows = %{public}d\n",
-            result, changedRows);
+        absRdbPredicates = nullptr;
+    } else if (result == DATA_STORAGE_ERROR) {
+        DATA_STORAGE_LOGE("PdpProfileAbility::Update  NativeRdb::AbsRdbPredicates is null!");
     }
-    DATA_STORAGE_LOGD("PdpProfileAbility::Update end##result = %{public}d\n", result);
     return result;
 }
 
 int PdpProfileAbility::Delete(const Uri &uri, const NativeRdb::DataAbilityPredicates &predicates)
 {
+    int result = DATA_STORAGE_ERROR;
+    if (!IsInitOk()) {
+        return result;
+    }
     std::lock_guard<std::mutex> guard(lock_);
-    DATA_STORAGE_LOGD("PdpProfileAbility::Delete##uri = %{public}s\n", uri.ToString().c_str());
     Uri tempUri = uri;
     PdpProfileUriType pdpProfileUriType = ParseUriType(tempUri);
-    int result = TELEPHONY_ERROR;
-    NativeRdb::AbsRdbPredicates *absRdbPredicates = nullptr;
-    switch (pdpProfileUriType) {
-        case PdpProfileUriType::PDP_PROFILE: {
-            absRdbPredicates = new NativeRdb::AbsRdbPredicates(TABLE_PDP_PROFILE);
-            break;
+    if (pdpProfileUriType == PdpProfileUriType::PDP_PROFILE) {
+        auto *absRdbPredicates = new NativeRdb::AbsRdbPredicates(TABLE_PDP_PROFILE);
+        if (absRdbPredicates != nullptr) {
+            ConvertPredicates(predicates, absRdbPredicates);
+            int deletedRows = 0;
+            result = helper_.Delete(deletedRows, *absRdbPredicates);
+            free(absRdbPredicates);
+            absRdbPredicates = nullptr;
+        } else {
+            DATA_STORAGE_LOGE("PdpProfileAbility::Delete  NativeRdb::AbsRdbPredicates is null!");
         }
-        default:
-            break;
+    } else {
+        DATA_STORAGE_LOGI("PdpProfileAbility::Delete##uri = %{public}s\n", uri.ToString().c_str());
     }
-    if (absRdbPredicates != nullptr) {
-        DataAbilityPredicatesConvertAbsRdbPredicates(predicates, absRdbPredicates);
-        PrintfAbsRdbPredicates(absRdbPredicates);
-        int deletedRows;
-        result = helper_.Delete(deletedRows, *absRdbPredicates);
-        DATA_STORAGE_LOGD("PdpProfileAbility::Delete##result = %{public}d, deletedRows = %{public}d\n",
-            result, deletedRows);
-        free(absRdbPredicates);
-    }
-    DATA_STORAGE_LOGD("PdpProfileAbility::Delete end##result = %{public}d\n", result);
     return result;
+}
+
+bool PdpProfileAbility::IsInitOk()
+{
+    if (!initDatabaseDir) {
+        DATA_STORAGE_LOGE("PdpProfileAbility::IsInitOk initDatabaseDir failed!");
+    } else if (!initRdbStore) {
+        DATA_STORAGE_LOGE("PdpProfileAbility::IsInitOk initRdbStore failed!");
+    };
+    return initDatabaseDir && initRdbStore;
+}
+
+void PdpProfileAbility::InitUriMap()
+{
+    pdpProfileUriMap = {
+        {"/net/pdp_profile", PdpProfileUriType::PDP_PROFILE},
+        {"/net/pdp_profile/reset", PdpProfileUriType::RESET}
+    };
 }
 
 std::string PdpProfileAbility::GetType(const Uri &uri)
 {
-    DATA_STORAGE_LOGD("PdpProfileAbility::GetType##uri = %{public}s\n", uri.ToString().c_str());
+    DATA_STORAGE_LOGI("PdpProfileAbility::GetType##uri = %{public}s\n", uri.ToString().c_str());
     std::string retval(uri.ToString());
     return retval;
 }
 
 int PdpProfileAbility::OpenFile(const Uri &uri, const std::string &mode)
 {
-    DATA_STORAGE_LOGD("PdpProfileAbility::OpenFile##uri = %{public}s\n", uri.ToString().c_str());
+    DATA_STORAGE_LOGI("PdpProfileAbility::OpenFile##uri = %{public}s\n", uri.ToString().c_str());
     Uri tempUri = uri;
     PdpProfileUriType pdpProfileUriType = ParseUriType(tempUri);
     return static_cast<int>(pdpProfileUriType);
@@ -170,7 +192,7 @@ int PdpProfileAbility::OpenFile(const Uri &uri, const std::string &mode)
 
 PdpProfileUriType PdpProfileAbility::ParseUriType(Uri &uri)
 {
-    DATA_STORAGE_LOGD("PdpProfileAbility::ParseUriType start\n");
+    DATA_STORAGE_LOGI("PdpProfileAbility::ParseUriType start\n");
     PdpProfileUriType pdpProfileUriType = PdpProfileUriType::UNKNOW;
     std::string uriPath = uri.ToString();
     if (!uriPath.empty()) {
@@ -178,11 +200,11 @@ PdpProfileUriType PdpProfileAbility::ParseUriType(Uri &uri)
         Uri tempUri(uriPath);
         std::string path = tempUri.GetPath();
         if (!path.empty()) {
-            DATA_STORAGE_LOGD("PdpProfileAbility::ParseUriType##path = %{public}s\n", path.c_str());
+            DATA_STORAGE_LOGI("PdpProfileAbility::ParseUriType##path = %{public}s\n", path.c_str());
             std::map<std::string, PdpProfileUriType>::iterator it = pdpProfileUriMap.find(path);
             if (it != pdpProfileUriMap.end()) {
                 pdpProfileUriType = it->second;
-                DATA_STORAGE_LOGD("PdpProfileAbility::ParseUriType##pdpProfileUriType = %{public}d\n",
+                DATA_STORAGE_LOGI("PdpProfileAbility::ParseUriType##pdpProfileUriType = %{public}d\n",
                     pdpProfileUriType);
             }
         }
@@ -190,35 +212,7 @@ PdpProfileUriType PdpProfileAbility::ParseUriType(Uri &uri)
     return pdpProfileUriType;
 }
 
-void PdpProfileAbility::PrintfAbsRdbPredicates(const NativeRdb::AbsRdbPredicates *predicates)
-{
-    std::string whereClause = predicates->GetWhereClause();
-    DATA_STORAGE_LOGD("PdpProfileAbility::PrintfAbsRdbPredicates##whereClause = %{public}s\n", whereClause.c_str());
-    std::vector<std::string> whereArgs = predicates->GetWhereArgs();
-    int32_t size = whereArgs.size();
-    for (int i = 0; i < size; ++i) {
-        DATA_STORAGE_LOGD("PdpProfileAbility::PrintfAbsRdbPredicates##index = %{public}d, whereArgs = %{public}s\n",
-                          i, whereArgs[i].c_str());
-    }
-    std::string order = predicates->GetOrder();
-    DATA_STORAGE_LOGD("PdpProfileAbility::PrintfAbsRdbPredicates##order = %{public}s\n", order.c_str());
-    int limit = predicates->GetLimit();
-    DATA_STORAGE_LOGD("PdpProfileAbility::PrintfAbsRdbPredicates##limit = %{public}d\n", limit);
-    int offset = predicates->GetOffset();
-    DATA_STORAGE_LOGD("PdpProfileAbility::PrintfAbsRdbPredicates##offset = %{public}d\n", offset);
-    bool isDistinct = predicates->IsDistinct();
-    DATA_STORAGE_LOGD("PdpProfileAbility::PrintfAbsRdbPredicates##isDistinct = %{public}d\n", isDistinct);
-    std::string group = predicates->GetGroup();
-    DATA_STORAGE_LOGD("PdpProfileAbility::PrintfAbsRdbPredicates##Group = %{public}s\n", group.c_str());
-    std::string index = predicates->GetIndex();
-    DATA_STORAGE_LOGD("PdpProfileAbility::PrintfAbsRdbPredicates##Index = %{public}s\n", index.c_str());
-    bool isNeedAnd = predicates->IsNeedAnd();
-    DATA_STORAGE_LOGD("PdpProfileAbility::PrintfAbsRdbPredicates##isNeedAnd = %{public}d\n", isNeedAnd);
-    bool isSorted = predicates->IsSorted();
-    DATA_STORAGE_LOGD("PdpProfileAbility::PrintfAbsRdbPredicates##isSorted = %{public}d\n", isSorted);
-}
-
-void PdpProfileAbility::DataAbilityPredicatesConvertAbsRdbPredicates(
+void PdpProfileAbility::ConvertPredicates(
     const NativeRdb::DataAbilityPredicates &dataPredicates, NativeRdb::AbsRdbPredicates *absRdbPredicates)
 {
     NativeRdb::PredicatesUtils::SetWhereClauseAndArgs(

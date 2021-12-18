@@ -26,25 +26,92 @@ public:
     RdbSmsMmsHelper();
     ~RdbSmsMmsHelper() = default;
 
+    /**
+     * Delete sms_mms_info table data of the previous 30 days
+     *
+     * @return 0 is succeed else failed
+     */
     int32_t DeleteDataByThirty();
+
+    /**
+     * Insert sms_mms_info table data
+     *
+     * @param id id
+     * @param initialValues Table field data
+     * @return 0 is succeed else failed
+     */
     int32_t InsertSmsMmsInfo(int64_t &id, const NativeRdb::ValuesBucket &initialValues);
+
+    /**
+     * Batch Insert sms_mms_info table data
+     *
+     * @param id id
+     * @param values Table field data
+     * @return 0 is succeed else failed
+     */
     int32_t BatchInsertSmsMmsInfo(int64_t &id, const std::vector<NativeRdb::ValuesBucket> &values);
+
+    /**
+     * Statistics sms_mms_info table unread quantity
+     *
+     * @return unique_ptr<NativeRdb::AbsSharedResultSet>
+     */
     std::unique_ptr<NativeRdb::AbsSharedResultSet> StatisticsUnRead();
+
+    /**
+     * Query sms_mms_info table max group_id
+     *
+     * @return  unique_ptr<NativeRdb::AbsSharedResultSet>
+     */
     std::unique_ptr<NativeRdb::AbsSharedResultSet> QueryMaxGroupId();
+
+    /**
+     * Update dataBase path
+     *
+     * @param path path
+     */
     void UpdateDbPath(const std::string &path);
-    void Init();
+
+    /**
+     * Init dataBase
+     *
+     * @return 0 is succeed else failed
+     */
+    int Init();
 
 private:
+    /**
+     * Create SmsMmsInfo table
+     *
+     * @param createTableStr Create table statement
+     */
     void CreateSmsMmsInfoTableStr(std::string &createTableStr);
+
+    /**
+     * Create SmsSubsection table
+     *
+     * @param createTableStr Create table statement
+     */
     void CreateSmsSubsectionTableStr(std::string &createTableStr);
+
+    /**
+     * Create MmsProtocol table
+     *
+     * @param createTableStr Create table statement
+     */
     void CreateMmsProtocolTableStr(std::string &createTableStr);
+
+    /**
+     * Create MmsPart table
+     *
+     * @param createTableStr Create table statement
+     */
     void CreateMmsPartTableStr(std::string &createTableStr);
 
 private:
     const std::string DB_NAME = "sms_mms.db";
     std::string dbPath_ = FOLDER_PATH + DB_NAME;
-    int errCode_ = NativeRdb::E_OK;
-    int version_ = 1;
+    const int VERSION = 1;
 };
 } // namespace Telephony
 } // namespace OHOS

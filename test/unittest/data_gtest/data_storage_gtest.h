@@ -42,9 +42,11 @@ public:
         (const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const;
     std::map<char, RequestFuncType> requestFuncMap_;
 
-    std::shared_ptr<AppExecFwk::DataAbilityHelper> CreateDataAHelper(int32_t systemAbilityId) const;
-    std::shared_ptr<AppExecFwk::DataAbilityHelper> CreateSimHelper() const;
-    std::shared_ptr<AppExecFwk::DataAbilityHelper> CreateSmsHelper() const;
+    std::shared_ptr<AppExecFwk::DataAbilityHelper> CreateDataAHelper(
+        int32_t systemAbilityId, std::shared_ptr<Uri> dataAbilityUri) const;
+    std::shared_ptr<AppExecFwk::DataAbilityHelper> CreateSimHelper();
+    std::shared_ptr<AppExecFwk::DataAbilityHelper> CreateSmsHelper();
+    std::shared_ptr<AppExecFwk::DataAbilityHelper> CreatePdpProfileHelper();
 
     int SimInsert(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const;
     int SimUpdate(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const;
@@ -54,6 +56,15 @@ public:
     int SmsUpdate(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const;
     int SmsSelect(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const;
     int SmsDelete(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const;
+    int PdpProfileInsert(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const;
+    int PdpProfileUpdate(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const;
+    int PdpProfileSelect(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const;
+    int PdpProfileDelete(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const;
+
+private:
+    std::shared_ptr<AppExecFwk::DataAbilityHelper> simDataAbilityHelper = nullptr;
+    std::shared_ptr<AppExecFwk::DataAbilityHelper> smsDataAbilityHelper = nullptr;
+    std::shared_ptr<AppExecFwk::DataAbilityHelper> pdpProfileDataAbilityHelper = nullptr;
 };
 } // namespace Telephony
 } // namespace OHOS

@@ -45,14 +45,41 @@ public:
     virtual int BatchInsert(const Uri &uri, const std::vector<NativeRdb::ValuesBucket> &values) override;
 
 private:
+    /**
+     * Parse Uri Type
+     *
+     * @param uri Resource address
+     * @return return MessageUriType
+     */
     MessageUriType ParseUriType(Uri &uri);
-    void PrintfAbsRdbPredicates(const NativeRdb::AbsRdbPredicates *predicates);
-    void DataAbilityPredicatesConvertAbsRdbPredicates(
+
+    /**
+     * Convert DataAbilityPredicates to AbsRdbPredicates
+     *
+     * @param predicates DataAbilityPredicates
+     * @param absRdbPredicates AbsRdbPredicates
+     */
+    void ConvertPredicates(
         const NativeRdb::DataAbilityPredicates &predicates, NativeRdb::AbsRdbPredicates *absRdbPredicates);
+
+    /**
+    * Check whether the initialization succeeds
+    *
+    * @return true : succeed ,false : failed
+    */
+    bool IsInitOk();
+
+    /**
+    * Init UriMap
+    */
+    void InitUriMap();
 
 private:
     RdbSmsMmsHelper helper_;
     std::mutex lock_;
+    std::map<std::string, MessageUriType> smsMmsUriMap;
+    bool initDatabaseDir = false;
+    bool initRdbStore = false;
 };
 } // namespace OHOS
 } // namespace Telephony

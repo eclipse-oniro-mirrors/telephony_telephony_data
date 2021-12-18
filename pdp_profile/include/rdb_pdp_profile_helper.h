@@ -26,18 +26,47 @@ public:
     RdbPdpProfileHelper();
     ~RdbPdpProfileHelper() = default;
 
-    void Init();
+    /**
+     * Init dataBase
+     *
+     * @return 0 is succeed else failed
+     */
+    int Init();
+
+    /**
+     * Update dataBase path
+     *
+     * @param path path
+     */
     void UpdateDbPath(const std::string &path);
-    void ResetApn();
+
+    /**
+     * Reload pdp_profile table data form config json file
+     *
+     * @return 0 is succeed else failed
+     */
+    int ResetApn();
 
 private:
+    /**
+     * Create pdp_profile table
+     *
+     * @param createTableStr Create table statement
+     * @param tableName tableName
+     */
     void CreatePdpProfileTableStr(std::string &createTableStr, const std::string &tableName);
+
+    /**
+     * End the transaction action
+     *
+     * @return 0 is succeed else failed
+     */
+    int EndTransactionAction();
 
 private:
     const std::string DB_NAME = "net.db";
     std::string dbPath_ = FOLDER_PATH + DB_NAME;
-    int errCode_ = NativeRdb::E_OK;
-    int version_ = 1;
+    const int VERSION = 1;
 };
 } // namespace Telephony
 } // namespace OHOS

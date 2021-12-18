@@ -23,6 +23,7 @@
 #include "rdb_store.h"
 
 #include "pdp_profile_data.h"
+#include "data_storage_errors.h"
 
 namespace OHOS {
 namespace Telephony {
@@ -33,7 +34,8 @@ public:
     void ParserPdpProfileToValuesBucket(NativeRdb::ValuesBucket &value, const PdpProfile &bean);
 
 private:
-    int LoaderJsonFile(char *&content);
+    int LoaderJsonFile(char *&content) const;
+    int CloseFile(FILE *f) const;
 
 private:
     const char *PATH = "/system/etc/security/operator_configuration.json";
@@ -50,6 +52,7 @@ private:
     const char *ITEM_IP_ADDRESS = "ip_addr";
     const char *ITEM_MMS_IP_ADDRESS = "mms_ip_addr";
     const char *ITEM_HOME_URL = "home_url";
+    const std::string APN_VERSION = "apn_version";
 };
 } // namespace Telephony
 } // namespace OHOS
