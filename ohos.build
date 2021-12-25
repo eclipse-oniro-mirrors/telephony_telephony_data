@@ -3,8 +3,7 @@
     "parts": {
         "data_storage": {
             "module_list": [
-                "//base/telephony/data_storage:tel_data_storage",
-                "//base/telephony/data_storage/test/unittest/data_test:tel_data_storage_test"
+                "//base/telephony/data_storage:tel_data_storage"
             ],
             "test_list": [
                 "//base/telephony/data_storage/test:unittest"
