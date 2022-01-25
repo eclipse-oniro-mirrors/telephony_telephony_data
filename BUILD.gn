@@ -49,8 +49,8 @@ ohos_shared_library("tel_data_storage") {
 
   external_deps = [
     "ability_runtime:want",
-    "appexecfwk_standard:libeventhandler",
     "ces_standard:cesfwk_innerkits",
+    "eventhandler:libeventhandler",
     "hiviewdfx_hilog_native:libhilog",
     "native_appdatamgr:native_appdatafwk",
     "native_appdatamgr:native_dataability",
