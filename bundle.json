@@ -30,7 +30,7 @@
         "ram": "200KB",
         "deps": {
             "components": [
-                "ability_runtime",
+                "ability_base",
                 "appexecfwk_standard",
                 "ces_standard",
                 "dmsfwk_standard",
