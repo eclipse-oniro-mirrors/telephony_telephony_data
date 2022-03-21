@@ -127,7 +127,7 @@ int ParserUtil::LoaderJsonFile(char *&content) const
         CloseFile(f);
         return static_cast<int>(LoadProFileErrorType::LOAD_FILE_ERROR);
     }
-    if (len <= 0 || len > ULONG_MAX) {
+    if (len == 0 || len > ULONG_MAX) {
         DATA_STORAGE_LOGE("ParserUtil::LoaderJsonFile len <= 0 or len > LONG_MAX!");
         CloseFile(f);
         return static_cast<int>(LoadProFileErrorType::LOAD_FILE_ERROR);

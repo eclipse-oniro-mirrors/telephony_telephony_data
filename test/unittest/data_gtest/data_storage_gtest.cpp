@@ -53,7 +53,7 @@ std::shared_ptr<AppExecFwk::DataAbilityHelper> DataStorageGtest::CreateDataAHelp
         return nullptr;
     }
     auto remoteObj = saManager->GetSystemAbility(systemAbilityId);
-    while (remoteObj == nullptr) {
+    if (remoteObj == nullptr) {
         DATA_STORAGE_LOGE("DataStorageGtest GetSystemAbility Service Failed.");
         return nullptr;
     }
