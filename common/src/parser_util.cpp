@@ -57,7 +57,7 @@ int ParserUtil::ParserPdpProfileJson(std::vector<PdpProfile> &vec)
 
 void ParserUtil::ParserPdpProfileInfos(std::vector<PdpProfile> &vec, Json::Value &root)
 {
-    for (int i = 0; i < root.size(); i++) {
+    for (size_t i = 0; i < root.size(); i++) {
         Json::Value itemRoot = root[i];
         PdpProfile bean;
         bean.profileName = itemRoot[ITEM_OPERATOR_NAME].asString();
@@ -120,7 +120,7 @@ int ParserUtil::LoaderJsonFile(char *&content) const
         CloseFile(f);
         return static_cast<int>(LoadProFileErrorType::LOAD_FILE_ERROR);
     }
-    len = ftell(f);
+    len = static_cast<size_t>(ftell(f));
     int ret_seek_set = fseek(f, 0, SEEK_SET);
     if (ret_seek_set != 0) {
         DATA_STORAGE_LOGE("ParserUtil::LoaderJsonFile ret_seek_set != 0!");

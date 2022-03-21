@@ -21,7 +21,7 @@ int RdbBaseCallBack::OnCreate(NativeRdb::RdbStore &rdbStore)
 {
     DATA_STORAGE_LOGI("Data_Storage RdbSmsMmsCallback::OnCreate\n");
     int32_t ret = NativeRdb::E_ERROR;
-    int32_t size = createTableVec_.size();
+    size_t size = createTableVec_.size();
     if (size == 0) {
         return ret;
     }
