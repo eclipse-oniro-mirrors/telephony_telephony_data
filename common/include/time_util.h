@@ -68,7 +68,8 @@ void GetCurrentTime(std::string &date)
     if (now == -1) {
         return;
     }
-    tm *ltm = localtime(&now);
+    tm *ltm = nullptr;
+    ltm = localtime_r(&now, ltm);
     if (ltm == nullptr) {
         return;
     }
