@@ -23,7 +23,6 @@
 #include "values_bucket.h"
 #include "uri.h"
 #include "resource_manager.h"
-#include "permission/permission_kit.h"
 
 #include "sim_data.h"
 #include "sms_mms_data.h"
@@ -39,10 +38,6 @@ std::map<char, CmdProcessFunc> g_pdpProfileFuncMap;
 std::shared_ptr<AppExecFwk::DataAbilityHelper> simDataAbilityHelper = nullptr;
 std::shared_ptr<AppExecFwk::DataAbilityHelper> smsDataAbilityHelper = nullptr;
 std::shared_ptr<AppExecFwk::DataAbilityHelper> pdpProfileDataAbilityHelper = nullptr;
-const std::string bundleName = "com.ohos.telephonydataability";
-const std::string smsPermission("com.ohos.smsmmsability.DataAbilityShellProvider.PROVIDER");
-const std::string simPermission("com.ohos.simability.DataAbilityShellProvider.PROVIDER");
-const std::string pdpProfilePermission("com.ohos.pdpprofileability.DataAbilityShellProvider.PROVIDER");
 std::shared_ptr<AppExecFwk::DataAbilityHelper> CreateDataAHelper(
     int32_t systemAbilityId, std::shared_ptr<Uri> dataAbilityUri)
 {
@@ -62,22 +57,12 @@ std::shared_ptr<AppExecFwk::DataAbilityHelper> CreateDataAHelper(
 
 void ApplyPermission()
 {
-    std::vector <std::string> vec;
-    vec.push_back(smsPermission);
-    vec.push_back(simPermission);
-    vec.push_back(pdpProfilePermission);
-    Security::Permission::PermissionKit::AddSystemGrantedReqPermissions(bundleName, vec);
-    Security::Permission::PermissionKit::GrantSystemGrantedPermission(bundleName, smsPermission);
-    Security::Permission::PermissionKit::GrantSystemGrantedPermission(bundleName, simPermission);
-    Security::Permission::PermissionKit::GrantSystemGrantedPermission(bundleName, pdpProfilePermission);
+    return;
 }
 
 void RemovePermission()
 {
-    Security::Permission::PermissionKit::RemoveSystemGrantedReqPermissions(bundleName);
-    Security::Permission::PermissionKit::RevokeSystemGrantedPermission(bundleName, smsPermission);
-    Security::Permission::PermissionKit::RevokeSystemGrantedPermission(bundleName, simPermission);
-    Security::Permission::PermissionKit::RevokeSystemGrantedPermission(bundleName, pdpProfilePermission);
+    return;
 }
 
 std::shared_ptr<AppExecFwk::DataAbilityHelper> CreateSimHelper()
