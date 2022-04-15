@@ -79,9 +79,9 @@ The data storage module stores persistent data of key modules of the Telephony s
 
 | Module          | **Required Permission**                                                |
 | -------------- | ------------------------------------------------------------ |
-| SMS/MMS module    | com.ohos.smsmmsability.DataAbilityShellProvider.PROVIDER     |
-| SIM card module     | com.ohos.simability.DataAbilityShellProvider.PROVIDER        |
-| Network carrier module| com.ohos.pdpprofileability.DataAbilityShellProvider.PROVIDER |
+| SMS/MMS module    | ohos.permission.READ_MESSAGES                                |
+| SIM card module     | ohos.permission.GET_TELEPHONY_STATE<br />ohos.permission.SET_TELEPHONY_STATE |
+| Network carrier module| ohos.permission.GET_TELEPHONY_STATE<br />ohos.permission.SET_TELEPHONY_STATE |
 
 ## Usage Guidelines<a name="section163mcpsimp"></a>
 
