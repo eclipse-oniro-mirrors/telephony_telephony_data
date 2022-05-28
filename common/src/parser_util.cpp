@@ -29,7 +29,7 @@ namespace Telephony {
 int ParserUtil::ParserPdpProfileJson(std::vector<PdpProfile> &vec)
 {
     char *content = nullptr;
-    int ret = LoaderJsonFile(content);
+    int ret = LoaderJsonFile(content, PATH);
     if (ret != DATA_STORAGE_SUCCESS) {
         DATA_STORAGE_LOGE("ParserUtil::ParserPdpProfileJson LoaderJsonFile is fail!\n");
         return ret;
@@ -101,12 +101,113 @@ void ParserUtil::ParserPdpProfileToValuesBucket(NativeRdb::ValuesBucket &value, 
     value.PutString(PdpProfileData::APN_ROAM_PROTOCOL, bean.roamPdpProtocol);
 }
 
-int ParserUtil::LoaderJsonFile(char *&content) const
+int ParserUtil::ParserOpKeyJson(std::vector<OpKey> &vec)
+{
+    char *content = nullptr;
+    int ret = LoaderJsonFile(content, OPKEY_INFO_PATH);
+    if (ret != DATA_STORAGE_SUCCESS) {
+        DATA_STORAGE_LOGE("ParserUtil::ParserOpKeyJson LoaderJsonFile is fail!\n");
+        return ret;
+    }
+    const int contentLength = strlen(content);
+    const std::string rawJson(content);
+    delete content;
+    JSONCPP_STRING err;
+    Json::Value root;
+    Json::CharReaderBuilder builder;
+    Json::CharReader* reader(builder.newCharReader());
+    if (!reader->parse(rawJson.c_str(), rawJson.c_str() + contentLength, &root, &err)) {
+        DATA_STORAGE_LOGE("ParserUtil::ParserOpKeyInfos reader is error!\n");
+        return static_cast<int>(LoadProFileErrorType::FILE_PARSER_ERROR);
+    }
+    delete reader;
+    int version = -1;
+    std::string versionStr = root[OPKEY_VERSION].asString();
+    if (versionStr.empty()) {
+        version = -1;
+    } else {
+        version = atoi(versionStr.c_str());
+    }
+    int oldversion = PreferencesUtil::GetInstance()->ObtainInt(SAVE_OPKEY_VERSION, DEFAULT_OPKEY_VERSION);
+    DATA_STORAGE_LOGI("ParserUtil::ParserOpKeyJson version =  %{public}d oldversion = %{public}d", version, oldversion);
+    if (version == oldversion) {
+        DATA_STORAGE_LOGE("ParserUtil::ParserOpKeyJson version no change");
+        return VERSION_NO_CHANGE;
+    }
+    PreferencesUtil::GetInstance()->SaveInt(SAVE_OPKEY_VERSION, version);
+    Json::Value itemRoots = root[ITEM_OPERATOR_ID];
+    if (itemRoots.size() == 0) {
+        DATA_STORAGE_LOGE("ParserUtil::ParserOpKeyInfos itemRoots size == 0!\n");
+        return static_cast<int>(LoadProFileErrorType::ITEM_SIZE_IS_NULL);
+    }
+    ParserOpKeyInfos(vec, itemRoots);
+    return DATA_STORAGE_SUCCESS;
+}
+
+void ParserUtil::ParserOpKeyInfos(std::vector<OpKey> &vec, Json::Value &root)
+{
+    for (int i = 0; i < root.size(); i++) {
+        Json::Value itemRoot = root[i];
+        OpKey bean;
+        Json::Value ruleRoot = itemRoot[ITEM_RULE];
+        bean.mccmnc = ruleRoot[ITEM_MCCMNC].asString();
+        bean.gid1 = ruleRoot[ITEM_GID_ONE].asString();
+        bean.gid2 = ruleRoot[ITEM_GID_TWO].asString();
+        bean.imsi = ruleRoot[ITEM_IMSI].asString();
+        bean.spn = ruleRoot[ITEM_SPN].asString();
+        bean.iccid = ruleRoot[ITEM_ICCID].asString();
+        bean.operatorName = itemRoot[ITEM_OPERATOR_NAME_OPKEY].asString();
+        std::string operatorKeyStr = itemRoot[ITEM_OPERATOR_KEY].asString();
+        if (operatorKeyStr.empty()) {
+            bean.operatorKey = DEFAULT_OPKEY_VERSION;
+        } else {
+            bean.operatorKey = atoi(operatorKeyStr.c_str());
+        }
+        bean.operatorKeyExt = itemRoot[ITEM_OPERATOR_KEY_EXT].asString();
+        int ruleId = static_cast<int32_t>(RuleID::RULE_EMPTY);
+        if (!bean.mccmnc.empty()) {
+            ruleId += static_cast<int32_t>(RuleID::RULE_MCCMNC);
+        }
+        if (!bean.iccid.empty()) {
+            ruleId += static_cast<int32_t>(RuleID::RULE_ICCID);
+        }
+        if (!bean.imsi.empty()) {
+            ruleId += static_cast<int32_t>(RuleID::RULE_IMSI);
+        }
+        if (!bean.spn.empty()) {
+            ruleId += static_cast<int32_t>(RuleID::RULE_SPN);
+        }
+        if (!bean.gid1.empty()) {
+            ruleId += static_cast<int32_t>(RuleID::RULE_GID1);
+        }
+        if (!bean.gid2.empty()) {
+            ruleId += static_cast<int32_t>(RuleID::RULE_GID2);
+        }
+        bean.ruleId = ruleId;
+        vec.push_back(bean);
+    }
+}
+
+void ParserUtil::ParserOpKeyToValuesBucket(NativeRdb::ValuesBucket &value, const OpKey &bean)
+{
+    value.PutString(OpKeyData::MCCMNC, bean.mccmnc);
+    value.PutString(OpKeyData::GID1, bean.gid1);
+    value.PutString(OpKeyData::GID2, bean.gid2);
+    value.PutString(OpKeyData::IMSI, bean.imsi);
+    value.PutString(OpKeyData::SPN, bean.spn);
+    value.PutString(OpKeyData::ICCID, bean.iccid);
+    value.PutString(OpKeyData::OPERATOR_NAME, bean.operatorName);
+    value.PutInt(OpKeyData::OPERATOR_KEY, bean.operatorKey);
+    value.PutString(OpKeyData::OPERATOR_KEY_EXT, bean.operatorKeyExt);
+    value.PutInt(OpKeyData::RULE_ID, bean.ruleId);
+}
+
+int ParserUtil::LoaderJsonFile(char *&content, const char *path) const
 {
     size_t len = 0;
     char realPath[PATH_MAX] = {0x00};
-    if (realpath(PATH, realPath) == nullptr) {
-        DATA_STORAGE_LOGE("ParserUtil::LoaderJsonFile realpath fail! #PATH: %{public}s", PATH);
+    if (realpath(path, realPath) == nullptr) {
+        DATA_STORAGE_LOGE("ParserUtil::LoaderJsonFile realpath fail! #PATH: %{public}s", path);
         return static_cast<int>(LoadProFileErrorType::REALPATH_FAIL);
     }
     FILE *f = fopen(realPath, "rb");

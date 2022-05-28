@@ -32,6 +32,9 @@ ohos_shared_library("tel_data_storage") {
     "$SOURCE_DIR/common/src/preferences_util.cpp",
     "$SOURCE_DIR/common/src/rdb_base_callback.cpp",
     "$SOURCE_DIR/common/src/rdb_base_helper.cpp",
+    "$SOURCE_DIR/opkey/src/opkey_ability.cpp",
+    "$SOURCE_DIR/opkey/src/rdb_opkey_callback.cpp",
+    "$SOURCE_DIR/opkey/src/rdb_opkey_helper.cpp",
     "$SOURCE_DIR/pdp_profile/src/pdp_profile_ability.cpp",
     "$SOURCE_DIR/pdp_profile/src/rdb_pdp_profile_callback.cpp",
     "$SOURCE_DIR/pdp_profile/src/rdb_pdp_profile_helper.cpp",
@@ -47,6 +50,7 @@ ohos_shared_library("tel_data_storage") {
     "$SOURCE_DIR/sim/include",
     "$SOURCE_DIR/sms_mms/include",
     "$SOURCE_DIR/pdp_profile/include",
+    "$SOURCE_DIR/opkey/include",
     "$SOURCE_DIR/common/include",
   ]
 
