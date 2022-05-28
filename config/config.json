@@ -61,6 +61,17 @@
             "uri": "dataability://com.ohos.pdpprofileability",
             "srcLanguage":"c++",
             "visible": true
+        },
+        {
+            "name": "OpKeyAbility",
+            "readPermission": "ohos.permission.GET_TELEPHONY_STATE",
+            "writePermission": "ohos.permission.SET_TELEPHONY_STATE",
+            "launchType": "standard",
+            "orientation": "unspecified",
+            "type": "data",
+            "uri": "dataability://com.ohos.opkeyability",
+            "srcLanguage":"c++",
+            "visible": true
         }]
     }
 }

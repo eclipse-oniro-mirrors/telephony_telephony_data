@@ -26,7 +26,7 @@
 
 namespace OHOS {
 namespace Telephony {
-class PreferencesUtil {
+class PreferencesUtil : public DelayedSingleton<PreferencesUtil> {
     DECLARE_DELAYED_SINGLETON(PreferencesUtil);
 
 public:

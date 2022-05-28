@@ -27,6 +27,7 @@
 #include "sim_data.h"
 #include "sms_mms_data.h"
 #include "pdp_profile_data.h"
+#include "opkey_data.h"
 #include "data_storage_log_wrapper.h"
 
 namespace OHOS {
@@ -35,9 +36,11 @@ using CmdProcessFunc = int (*)(std::shared_ptr<AppExecFwk::DataAbilityHelper> he
 std::map<char, CmdProcessFunc> g_simFuncMap;
 std::map<char, CmdProcessFunc> g_smsFuncMap;
 std::map<char, CmdProcessFunc> g_pdpProfileFuncMap;
+std::map<char, CmdProcessFunc> g_opKeyFuncMap;
 std::shared_ptr<AppExecFwk::DataAbilityHelper> simDataAbilityHelper = nullptr;
 std::shared_ptr<AppExecFwk::DataAbilityHelper> smsDataAbilityHelper = nullptr;
 std::shared_ptr<AppExecFwk::DataAbilityHelper> pdpProfileDataAbilityHelper = nullptr;
+std::shared_ptr<AppExecFwk::DataAbilityHelper> opKeyDataAbilityHelper = nullptr;
 std::shared_ptr<AppExecFwk::DataAbilityHelper> CreateDataAHelper(
     int32_t systemAbilityId, std::shared_ptr<Uri> dataAbilityUri)
 {
@@ -104,6 +107,19 @@ std::shared_ptr<AppExecFwk::DataAbilityHelper> CreatePdpProfileHelper()
     return pdpProfileDataAbilityHelper;
 }
 
+std::shared_ptr<AppExecFwk::DataAbilityHelper> CreateOpKeyHelper()
+{
+    if (opKeyDataAbilityHelper == nullptr) {
+        std::shared_ptr<Uri> dataAbilityUri = std::make_shared<Uri>(OPKEY_URI);
+        if (dataAbilityUri == nullptr) {
+            DATA_STORAGE_LOGE("CreateOpKeyHelper dataAbilityUri is nullptr");
+            return nullptr;
+        }
+        opKeyDataAbilityHelper = CreateDataAHelper(TELEPHONY_SMS_MMS_SYS_ABILITY_ID, dataAbilityUri);
+    }
+    return opKeyDataAbilityHelper;
+}
+
 int SimSetCardByType(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
 {
     Uri uri("dataability:///com.ohos.simability/sim/sim_info/set_card");
@@ -112,6 +128,53 @@ int SimSetCardByType(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
     value.PutInt(SimData::SLOT_INDEX, 1);
     value.PutInt(SimData::CARD_TYPE, 1);
     return helper->Update(uri, value, predicates);
+}
+
+int OpKeyInsert(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
+{
+    int opkey = 1435;
+    Uri uri("dataability:///com.ohos.opkeyability/opkey/opkey_info");
+    NativeRdb::ValuesBucket value;
+    value.PutInt(OpKeyData::ID, 1);
+    value.PutString(OpKeyData::MCCMNC, "46000");
+    value.PutString(OpKeyData::GID1, "gid1");
+    value.PutString(OpKeyData::OPERATOR_NAME, "Mobile");
+    value.PutInt(OpKeyData::OPERATOR_KEY, opkey);
+    return helper->Insert(uri, value);
+}
+
+int OpKeyUpdate(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
+{
+    Uri uri("dataability:///com.ohos.opkeyability/opkey/opkey_info");
+    NativeRdb::ValuesBucket values;
+    values.PutString(OpKeyData::GID1, "gidd1");
+    NativeRdb::DataAbilityPredicates predicates;
+    predicates.EqualTo(OpKeyData::OPERATOR_KEY, "1435");
+    return helper->Update(uri, values, predicates);
+}
+
+int OpKeySelect(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
+{
+    DATA_STORAGE_LOGI("OpKeySelect --- ");
+    Uri uri("dataability:///com.ohos.opkeyability/opkey/opkey_info");
+    std::vector<std::string> colume;
+    NativeRdb::DataAbilityPredicates predicates;
+    std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet = helper->Query(uri, colume, predicates);
+    if (resultSet != nullptr) {
+        int count;
+        resultSet->GetRowCount(count);
+        std::cout << "count is " << count;
+        return count;
+    }
+    return -1;
+}
+
+int OpKeyDelete(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
+{
+    Uri uri("dataability:///com.ohos.opkeyability/opkey/opkey_info");
+    NativeRdb::DataAbilityPredicates predicates;
+    predicates.EqualTo(OpKeyData::ID, "1");
+    return helper->Delete(uri, predicates);
 }
 
 int SimInsert(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
@@ -245,6 +308,7 @@ int PdpProfileSelect(std::shared_ptr<AppExecFwk::DataAbilityHelper> helper)
     if (resultSet != nullptr) {
         int count;
         resultSet->GetRowCount(count);
+        std::cout << "count is " << count;
         return count;
     }
     return -1;
@@ -266,6 +330,10 @@ void Init()
     g_pdpProfileFuncMap['d'] = PdpProfileDelete;
     g_pdpProfileFuncMap['f'] = PdpProfileSelect;
     g_pdpProfileFuncMap['h'] = PdpProfileReset;
+    g_opKeyFuncMap['x'] = OpKeyInsert;
+    g_opKeyFuncMap['c'] = OpKeyUpdate;
+    g_opKeyFuncMap['v'] = OpKeySelect;
+    g_opKeyFuncMap['b'] = OpKeyDelete;
     ApplyPermission();
 }
 
@@ -304,6 +372,17 @@ int VerifyCmd(char inputCMD, std::shared_ptr<AppExecFwk::DataAbilityHelper> &hel
             return 0;
         }
     }
+    auto itFunOpKey = g_opKeyFuncMap.find(inputCMD);
+    if (itFunOpKey != g_opKeyFuncMap.end()) {
+        auto memberFunc = itFunOpKey->second;
+        if (memberFunc != nullptr) {
+            helper = CreateOpKeyHelper();
+            if (helper != nullptr) {
+                (*memberFunc)(helper);
+            }
+            return 0;
+        }
+    }
     return -1;
 }
 
@@ -312,10 +391,10 @@ void ResourceTest()
     OHOS::Global::Resource::ResourceManager *rm = OHOS::Global::Resource::CreateResourceManager();
     std::string outValue;
     rm->GetStringByName("hello_ceshi", outValue);
-    DATA_STORAGE_LOGE("DataSimRdbHelper::ResourceTest outValue = %{public}s", outValue.c_str());
+    DATA_STORAGE_LOGI("DataSimRdbHelper::ResourceTest outValue = %{public}s", outValue.c_str());
     outValue = "";
     rm->GetStringByName("hello_telephony", outValue);
-    DATA_STORAGE_LOGE("DataSimRdbHelper::ResourceTest outValue1 = %{public}s", outValue.c_str());
+    DATA_STORAGE_LOGI("DataSimRdbHelper::ResourceTest outValue1 = %{public}s", outValue.c_str());
     free(rm);
     rm = nullptr;
 }
@@ -340,6 +419,10 @@ void PrintfHint()
         "f:PdpProfileSelect()\n"
         "h:PdpProfileReset()\n"
         "g:ResourceTest()\n"
+        "x:OpKeyInsert()\n"
+        "c:OpKeyUpdate()\n"
+        "v:OpKeySelect()\n"
+        "b:OpKeyDelete()\n"
         "z:exit\n"
         "***********************************\n"
         "your choice: ");

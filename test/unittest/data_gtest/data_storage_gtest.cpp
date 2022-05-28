@@ -19,6 +19,7 @@
 #include "sim_data.h"
 #include "sms_mms_data.h"
 #include "pdp_profile_data.h"
+#include "opkey_data.h"
 
 namespace OHOS {
 namespace Telephony {
@@ -88,7 +89,7 @@ std::shared_ptr<AppExecFwk::DataAbilityHelper> DataStorageGtest::CreateSmsHelper
 
 std::shared_ptr<AppExecFwk::DataAbilityHelper> DataStorageGtest::CreatePdpProfileHelper()
 {
-    if (smsDataAbilityHelper == nullptr) {
+    if (pdpProfileDataAbilityHelper == nullptr) {
         std::shared_ptr<Uri> dataAbilityUri = std::make_shared<Uri>(PDP_PROFILE_URI);
         if (dataAbilityUri == nullptr) {
             DATA_STORAGE_LOGE("CreatePdpProfileHelper dataAbilityUri is nullptr");
@@ -97,6 +98,64 @@ std::shared_ptr<AppExecFwk::DataAbilityHelper> DataStorageGtest::CreatePdpProfil
         pdpProfileDataAbilityHelper = CreateDataAHelper(TELEPHONY_SMS_MMS_SYS_ABILITY_ID, dataAbilityUri);
     }
     return pdpProfileDataAbilityHelper;
+}
+
+std::shared_ptr<AppExecFwk::DataAbilityHelper> DataStorageGtest::CreateOpKeyHelper()
+{
+    if (opKeyDataAbilityHelper == nullptr) {
+        std::shared_ptr<Uri> dataAbilityUri = std::make_shared<Uri>(OPKEY_URI);
+        if (dataAbilityUri == nullptr) {
+            DATA_STORAGE_LOGE("CreateOpKeyHelper dataAbilityUri is nullptr");
+            return nullptr;
+        }
+        opKeyDataAbilityHelper = CreateDataAHelper(TELEPHONY_SMS_MMS_SYS_ABILITY_ID, dataAbilityUri);
+    }
+    return opKeyDataAbilityHelper;
+}
+
+int DataStorageGtest::OpKeyInsert(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const
+{
+    int opkey = 110;
+    Uri uri("dataability:///com.ohos.opkeyability/opkey/opkey_info");
+    NativeRdb::ValuesBucket value;
+    value.PutInt(OpKeyData::ID, 1);
+    value.PutString(OpKeyData::MCCMNC, "460");
+    value.PutString(OpKeyData::GID1, "gid1");
+    value.PutString(OpKeyData::OPERATOR_NAME, "name");
+    value.PutInt(OpKeyData::OPERATOR_KEY, opkey);
+    return helper->Insert(uri, value);
+}
+
+int DataStorageGtest::OpKeyUpdate(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const
+{
+    Uri uri("dataability:///com.ohos.opkeyability/opkey/opkey_info");
+    NativeRdb::ValuesBucket values;
+    values.PutString(OpKeyData::OPERATOR_NAME, "name2");
+    NativeRdb::DataAbilityPredicates predicates;
+    predicates.EqualTo(OpKeyData::OPERATOR_KEY, "123");
+    return helper->Update(uri, values, predicates);
+}
+
+int DataStorageGtest::OpKeySelect(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const
+{
+    Uri uri("dataability:///com.ohos.opkeyability/opkey/opkey_info");
+    std::vector<std::string> colume;
+    NativeRdb::DataAbilityPredicates predicates;
+    std::shared_ptr<NativeRdb::AbsSharedResultSet> resultSet = helper->Query(uri, colume, predicates);
+    if (resultSet != nullptr) {
+        int count;
+        resultSet->GetRowCount(count);
+        return count;
+    }
+    return -1;
+}
+
+int DataStorageGtest::OpKeyDelete(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const
+{
+    Uri uri("dataability:///com.ohos.opkeyability/opkey/opkey_info");
+    NativeRdb::DataAbilityPredicates predicates;
+    predicates.EqualTo(OpKeyData::ID, "1");
+    return helper->Delete(uri, predicates);
 }
 
 int DataStorageGtest::SimInsert(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const
@@ -238,6 +297,58 @@ HWTEST_F(DataStorageGtest, DataStorage_001, TestSize.Level0)
 {
     CreateSmsHelper();
     CreateSimHelper();
+}
+
+/**
+ * @tc.number   OpKeyInsert_001
+ * @tc.name     insert opkey data
+ * @tc.desc     Function test
+ */
+HWTEST_F(DataStorageGtest, OpKeyInsert_001, TestSize.Level1)
+{
+    std::shared_ptr<AppExecFwk::DataAbilityHelper> helper = CreateOpKeyHelper();
+    if (helper != nullptr) {
+        OpKeyInsert(helper);
+    }
+}
+
+/**
+ * @tc.number   OpKeyUpdate_001
+ * @tc.name     update opkey data
+ * @tc.desc     Function test
+ */
+HWTEST_F(DataStorageGtest, OpKeyUpdate_001, TestSize.Level1)
+{
+    std::shared_ptr<AppExecFwk::DataAbilityHelper> helper = CreateOpKeyHelper();
+    if (helper != nullptr) {
+        OpKeyUpdate(helper);
+    }
+}
+
+/**
+ * @tc.number   OpKeySelect_001
+ * @tc.name     select opkey data
+ * @tc.desc     Function test
+ */
+HWTEST_F(DataStorageGtest, OpKeySelect_001, TestSize.Level1)
+{
+    std::shared_ptr<AppExecFwk::DataAbilityHelper> helper = CreateOpKeyHelper();
+    if (helper != nullptr) {
+        OpKeySelect(helper);
+    }
+}
+
+/**
+ * @tc.number   OpKeyDelete_001
+ * @tc.name     delete opkey data
+ * @tc.desc     Function test
+ */
+HWTEST_F(DataStorageGtest, OpKeyDelete_001, TestSize.Level1)
+{
+    std::shared_ptr<AppExecFwk::DataAbilityHelper> helper = CreateOpKeyHelper();
+    if (helper != nullptr) {
+        OpKeyDelete(helper);
+    }
 }
 
 /**

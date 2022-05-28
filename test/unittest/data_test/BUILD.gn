@@ -23,6 +23,7 @@ ohos_executable("tel_data_storage_test") {
     "$SOURCE_DIR/sim/include",
     "$SOURCE_DIR/pdp_profile/include",
     "$SOURCE_DIR/sms_mms/include",
+    "$SOURCE_DIR/opkey/include",
   ]
 
   deps = [

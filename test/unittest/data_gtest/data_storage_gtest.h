@@ -47,6 +47,7 @@ public:
     std::shared_ptr<AppExecFwk::DataAbilityHelper> CreateSimHelper();
     std::shared_ptr<AppExecFwk::DataAbilityHelper> CreateSmsHelper();
     std::shared_ptr<AppExecFwk::DataAbilityHelper> CreatePdpProfileHelper();
+    std::shared_ptr<AppExecFwk::DataAbilityHelper> CreateOpKeyHelper();
 
     int SimInsert(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const;
     int SimUpdate(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const;
@@ -60,11 +61,16 @@ public:
     int PdpProfileUpdate(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const;
     int PdpProfileSelect(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const;
     int PdpProfileDelete(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const;
+    int OpKeyInsert(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const;
+    int OpKeyUpdate(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const;
+    int OpKeySelect(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const;
+    int OpKeyDelete(const std::shared_ptr<AppExecFwk::DataAbilityHelper> &helper) const;
 
 private:
     std::shared_ptr<AppExecFwk::DataAbilityHelper> simDataAbilityHelper = nullptr;
     std::shared_ptr<AppExecFwk::DataAbilityHelper> smsDataAbilityHelper = nullptr;
     std::shared_ptr<AppExecFwk::DataAbilityHelper> pdpProfileDataAbilityHelper = nullptr;
+    std::shared_ptr<AppExecFwk::DataAbilityHelper> opKeyDataAbilityHelper = nullptr;
 };
 } // namespace Telephony
 } // namespace OHOS
