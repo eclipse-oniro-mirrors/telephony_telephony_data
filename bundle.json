@@ -36,8 +36,7 @@
                 "dmsfwk_standard",
                 "hiviewdfx_hilog_native",
                 "relational_store",
-                "dataability",
-                "preferences",
+                "preference",
                 "safwk",
                 "utils_base"
             ],
