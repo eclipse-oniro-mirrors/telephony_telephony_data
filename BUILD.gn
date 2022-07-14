@@ -73,7 +73,10 @@ ohos_shared_library("tel_data_storage") {
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
   ]
-
+  defines = [
+    "TELEPHONY_LOG_TAG = \"DataStorage\"",
+    "LOG_DOMAIN = 0xD001F05",
+  ]
   part_name = "data_storage"
   subsystem_name = "telephony"
 }

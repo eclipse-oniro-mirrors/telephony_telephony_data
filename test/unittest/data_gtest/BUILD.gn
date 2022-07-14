@@ -30,9 +30,12 @@ ohos_unittest("tel_data_storage_gtest") {
     "$SOURCE_DIR/sms_mms/include",
     "$SOURCE_DIR/opkey/include",
   ]
-
+  defines = [
+    "TELEPHONY_LOG_TAG = \"DataStorageGtest\"",
+    "LOG_DOMAIN = 0xD000F00",
+  ]
   if ("${product_name}" == "rk3568" || "${product_name}" == "DAYU") {
-    defines = [ "TEL_TEST_UNSUPPORT" ]
+    defines += [ "TEL_TEST_UNSUPPORT" ]
   }
 
   deps = [

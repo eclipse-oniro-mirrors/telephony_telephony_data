@@ -57,7 +57,7 @@ private:
 #endif
 
 #ifndef DATA_LOG_DOMAIN
-#define DATA_LOG_DOMAIN 0xD002B01
+#define DATA_LOG_DOMAIN 0xD001F00
 #endif
 
 static constexpr OHOS::HiviewDFX::HiLogLabel DATA_STORAGE_LABEL = {LOG_CORE, DATA_LOG_DOMAIN,

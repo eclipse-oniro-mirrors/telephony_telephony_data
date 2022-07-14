@@ -47,7 +47,10 @@ ohos_executable("tel_data_storage_test") {
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
   ]
-
+  defines += [
+    "TELEPHONY_LOG_TAG = \"DataStorageUTest\"",
+    "LOG_DOMAIN = 0xD000F00",
+  ]
   part_name = "data_storage"
   subsystem_name = "telephony"
 }
