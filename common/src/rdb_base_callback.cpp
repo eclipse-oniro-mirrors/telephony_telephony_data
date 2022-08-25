@@ -15,6 +15,10 @@
 
 #include "rdb_base_callback.h"
 
+#include "data_storage_log_wrapper.h"
+#include "rdb_errno.h"
+#include "rdb_store.h"
+
 namespace OHOS {
 namespace Telephony {
 int RdbBaseCallBack::OnCreate(NativeRdb::RdbStore &rdbStore)

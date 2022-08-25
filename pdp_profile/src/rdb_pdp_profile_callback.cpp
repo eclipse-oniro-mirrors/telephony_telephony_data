@@ -15,8 +15,13 @@
 
 #include "rdb_pdp_profile_callback.h"
 
-#include "pdp_profile_data.h"
+#include "data_storage_errors.h"
+#include "data_storage_log_wrapper.h"
 #include "parser_util.h"
+#include "pdp_profile_data.h"
+#include "rdb_errno.h"
+#include "rdb_store.h"
+#include "values_bucket.h"
 
 namespace OHOS {
 namespace Telephony {

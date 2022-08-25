@@ -16,10 +16,24 @@
 #ifndef DATA_STORAGE_RDB_BASE_HELPER_H
 #define DATA_STORAGE_RDB_BASE_HELPER_H
 
-#include "rdb_helper.h"
-#include "rdb_base_callback.h"
+#include <stdint.h>
+
+#include "data_storage_log_wrapper.h"
+#include "iosfwd"
+#include "memory"
+#include "string"
+#include "vector"
 
 namespace OHOS {
+namespace NativeRdb {
+class AbsRdbPredicates;
+class AbsSharedResultSet;
+class RdbOpenCallback;
+class RdbStore;
+class RdbStoreConfig;
+class ValueObject;
+class ValuesBucket;
+} // namespace NativeRdb
 namespace Telephony {
 class RdbBaseHelper {
 public:

@@ -15,7 +15,13 @@
 
 #include "rdb_sms_mms_callback.h"
 
+#include "data_storage_log_wrapper.h"
+#include "rdb_errno.h"
+
 namespace OHOS {
+namespace NativeRdb {
+class RdbStore;
+}
 namespace Telephony {
 int RdbSmsMmsCallback::OnUpgrade(NativeRdb::RdbStore &rdbStore, int oldVersion, int newVersion)
 {

@@ -16,15 +16,19 @@
 #ifndef DATA_STORAGE_PREFERENCES_UTILS_H
 #define DATA_STORAGE_PREFERENCES_UTILS_H
 
+#include <stdint.h>
 #include <string>
-#include <vector>
 
-#include "singleton.h"
-#include "preferences.h"
+#include "iosfwd"
+#include "memory"
 #include "preferences_errno.h"
-#include "preferences_observer.h"
+#include "singleton.h"
 
 namespace OHOS {
+namespace NativePreferences {
+class Preferences;
+class PreferencesObserver;
+} // namespace NativePreferences
 namespace Telephony {
 class PreferencesUtil : public DelayedSingleton<PreferencesUtil> {
     DECLARE_DELAYED_SINGLETON(PreferencesUtil);

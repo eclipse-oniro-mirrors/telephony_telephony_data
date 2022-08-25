@@ -16,8 +16,11 @@
 #ifndef DATA_STORAGE_RDB_SIM_HELPER_H
 #define DATA_STORAGE_RDB_SIM_HELPER_H
 
+#include <stdint.h>
+
+#include "iosfwd"
 #include "rdb_base_helper.h"
-#include "sim_data.h"
+#include "string"
 
 namespace OHOS {
 namespace Telephony {

@@ -16,8 +16,10 @@
 #include "rdb_opkey_helper.h"
 
 #include "opkey_data.h"
+#include "rdb_errno.h"
 #include "rdb_opkey_callback.h"
-#include "parser_util.h"
+#include "rdb_store_config.h"
+#include "vector"
 
 namespace OHOS {
 namespace Telephony {

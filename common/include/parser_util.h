@@ -16,17 +16,23 @@
 #ifndef DATA_STORAGE_PDP_OPERATOR_PARSER_UTIL_H
 #define DATA_STORAGE_PDP_OPERATOR_PARSER_UTIL_H
 
-#include <iostream>
 #include <json/json.h>
-#include <vector>
 
-#include "data_storage_errors.h"
-#include "opkey_data.h"
-#include "pdp_profile_data.h"
+#include "iosfwd"
 #include "rdb_store.h"
+#include "string"
+
+namespace Json {
+class Value;
+}
 
 namespace OHOS {
+namespace NativeRdb {
+class ValuesBucket;
+}
 namespace Telephony {
+struct OpKey;
+struct PdpProfile;
 class ParserUtil {
 public:
     int ParserPdpProfileJson(std::vector<PdpProfile> &vec);

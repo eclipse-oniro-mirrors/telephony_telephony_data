@@ -15,12 +15,22 @@
 
 #include "sim_ability.h"
 
+#include <cstdint>
+
+#include "ability_context.h"
+#include "ability_loader.h"
+#include "abs_rdb_predicates.h"
 #include "abs_shared_result_set.h"
 #include "data_ability_predicates.h"
-#include "values_bucket.h"
-#include "predicates_utils.h"
-
 #include "data_storage_errors.h"
+#include "data_storage_log_wrapper.h"
+#include "new"
+#include "predicates_utils.h"
+#include "rdb_errno.h"
+#include "sim_data.h"
+#include "uri.h"
+#include "utility"
+#include "values_bucket.h"
 
 namespace OHOS {
 using AppExecFwk::AbilityLoader;

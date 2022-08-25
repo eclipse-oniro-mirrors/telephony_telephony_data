@@ -16,10 +16,19 @@
 #ifndef DATA_STORAGE_RDB_SMS_MMS_HELPER_H
 #define DATA_STORAGE_RDB_SMS_MMS_HELPER_H
 
+#include <stdint.h>
+
+#include "iosfwd"
+#include "memory"
 #include "rdb_base_helper.h"
-#include "sms_mms_data.h"
+#include "string"
+#include "vector"
 
 namespace OHOS {
+namespace NativeRdb {
+class AbsSharedResultSet;
+class ValuesBucket;
+} // namespace NativeRdb
 namespace Telephony {
 class RdbSmsMmsHelper : public RdbBaseHelper {
 public:

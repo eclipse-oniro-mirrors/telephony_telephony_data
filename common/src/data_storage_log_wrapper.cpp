@@ -15,6 +15,8 @@
 
 #include "data_storage_log_wrapper.h"
 
+#include "string"
+
 namespace OHOS {
 namespace Telephony {
 // initial static member object

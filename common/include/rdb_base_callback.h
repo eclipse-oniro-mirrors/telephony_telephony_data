@@ -16,12 +16,15 @@
 #ifndef DATA_STORAGE_RDB_BASE_CALLBACK_H
 #define DATA_STORAGE_RDB_BASE_CALLBACK_H
 
+#include "iosfwd"
 #include "rdb_open_callback.h"
-#include "rdb_errno.h"
-
-#include "data_storage_log_wrapper.h"
+#include "string"
+#include "vector"
 
 namespace OHOS {
+namespace NativeRdb {
+class RdbStore;
+}
 namespace Telephony {
 class RdbBaseCallBack : public NativeRdb::RdbOpenCallback {
 public:

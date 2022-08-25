@@ -17,7 +17,23 @@
 
 #include <regex>
 
+#include "abs_shared_result_set.h"
+#include "algorithm"
+#include "data_storage_log_wrapper.h"
+#include "new"
+#include "rdb_errno.h"
+#include "rdb_helper.h"
+#include "rdb_store.h"
+#include "type_traits"
+
 namespace OHOS {
+namespace NativeRdb {
+class AbsRdbPredicates;
+class RdbOpenCallback;
+class RdbStoreConfig;
+class ValueObject;
+class ValuesBucket;
+} // namespace NativeRdb
 namespace Telephony {
 int RdbBaseHelper::Insert(int64_t &id, const NativeRdb::ValuesBucket &initialValues, const std::string &table)
 {

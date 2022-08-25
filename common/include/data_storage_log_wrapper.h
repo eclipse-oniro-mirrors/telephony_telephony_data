@@ -16,8 +16,9 @@
 #ifndef OHOS_DATA_STORAGE_LOG_WRAPPER_H
 #define OHOS_DATA_STORAGE_LOG_WRAPPER_H
 
-#include <string>
-#include "hilog/log.h"
+#include "hilog/log_c.h"
+#include "hilog/log_cpp.h"
+#include "iosfwd"
 
 namespace OHOS {
 namespace Telephony {
