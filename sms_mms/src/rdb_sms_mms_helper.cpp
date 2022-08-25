@@ -14,10 +14,18 @@
  */
 
 #include "rdb_sms_mms_helper.h"
+
+#include "rdb_errno.h"
 #include "rdb_sms_mms_callback.h"
+#include "rdb_store_config.h"
+#include "sms_mms_data.h"
 #include "time_util.h"
 
 namespace OHOS {
+namespace NativeRdb {
+class AbsSharedResultSet;
+class ValuesBucket;
+} // namespace NativeRdb
 namespace Telephony {
 RdbSmsMmsHelper::RdbSmsMmsHelper()
 {

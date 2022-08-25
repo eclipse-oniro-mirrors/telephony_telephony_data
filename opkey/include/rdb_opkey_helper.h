@@ -16,8 +16,9 @@
 #ifndef DATA_STORAGE_RDB_OPKEY_HELPER_H
 #define DATA_STORAGE_RDB_OPKEY_HELPER_H
 
+#include "iosfwd"
 #include "rdb_base_helper.h"
-#include "opkey_data.h"
+#include "string"
 
 namespace OHOS {
 namespace Telephony {

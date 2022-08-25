@@ -16,9 +16,14 @@
 #ifndef DATA_STORAGE_RDB_PDP_OPERATOR_CALLBACK_H
 #define DATA_STORAGE_RDB_PDP_OPERATOR_CALLBACK_H
 
+#include "iosfwd"
 #include "rdb_base_callback.h"
+#include "vector"
 
 namespace OHOS {
+namespace NativeRdb {
+class RdbStore;
+}
 namespace Telephony {
 class RdbPdpProfileCallback : public RdbBaseCallBack {
 public:

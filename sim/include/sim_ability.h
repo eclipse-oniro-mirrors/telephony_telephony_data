@@ -16,15 +16,24 @@
 #ifndef DATA_STORAGE_SIM_ABILITY_H
 #define DATA_STORAGE_SIM_ABILITY_H
 
-#include "ability_loader.h"
-
+#include "__functional_base"
+#include "__mutex_base"
+#include "ability.h"
+#include "ability_lifecycle.h"
+#include "iosfwd"
+#include "map"
+#include "memory"
 #include "rdb_sim_helper.h"
+#include "string"
+#include "vector"
 
 namespace OHOS {
 namespace NativeRdb {
+class AbsRdbPredicates;
 class AbsSharedResultSet;
 class DataAbilityPredicates;
 class ValuesBucket;
+class ValueObject;
 }
 namespace Telephony {
 enum class SimUriType {

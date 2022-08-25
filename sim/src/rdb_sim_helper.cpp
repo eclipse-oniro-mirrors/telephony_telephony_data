@@ -16,13 +16,17 @@
 #include "rdb_sim_helper.h"
 
 #include "data_storage_errors.h"
+#include "data_storage_log_wrapper.h"
+#include "rdb_errno.h"
 #include "rdb_sim_callback.h"
+#include "rdb_store_config.h"
+#include "sim_data.h"
+#include "values_bucket.h"
+#include "vector"
 
 namespace OHOS {
 namespace Telephony {
-RdbSimHelper::RdbSimHelper()
-{
-}
+RdbSimHelper::RdbSimHelper() {}
 
 int RdbSimHelper::Init()
 {
