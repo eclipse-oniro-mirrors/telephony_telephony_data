@@ -1,10 +1,10 @@
 {
-    "name": "@ohos/telephony_data",
+    "name": "@ohos/data_storage",
     "version": "3.1.0",
     "description": "telephony data storage service",
     "publishAs": "code-segment",
     "homePage": "https://gitee.com/openharmony",
-    "repository": "https://gitee.com/openharmony/telephony_telephony_data",
+    "repository": "https://gitee.com/openharmony/telephony_data_storage",
     "license": "Apache License 2.0",
     "language": "",
     "private": false,
