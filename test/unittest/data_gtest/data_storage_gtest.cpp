@@ -333,7 +333,7 @@ HWTEST_F(DataStorageGtest, OpKeyInsert_001, TestSize.Level1)
  * @tc.name     update opkey data
  * @tc.desc     Function test
  */
-HWTEST_F(DataStorageGtest, OpKeyUpdate_001, TestSize.Level1)
+HWTEST_F(DataStorageGtest, OpKeyUpdate_001, TestSize.Level2)
 {
     std::shared_ptr<AppExecFwk::DataAbilityHelper> helper = CreateOpKeyHelper();
     if (helper != nullptr) {
@@ -506,7 +506,7 @@ HWTEST_F(DataStorageGtest, PdpProfileInsert_001, TestSize.Level1)
  * @tc.name     update apn data
  * @tc.desc     Function test
  */
-HWTEST_F(DataStorageGtest, PdpProfileUpdate_001, TestSize.Level1)
+HWTEST_F(DataStorageGtest, PdpProfileUpdate_001, TestSize.Level2)
 {
     std::shared_ptr<AppExecFwk::DataAbilityHelper> helper = CreatePdpProfileHelper();
     if (helper != nullptr) {
