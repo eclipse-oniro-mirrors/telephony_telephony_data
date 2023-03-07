@@ -127,8 +127,9 @@ int PdpProfileAbility::Insert(const Uri &uri, const DataShare::DataShareValuesBu
     return id;
 }
 
-std::shared_ptr<DataShare::DataShareResultSet> PdpProfileAbility::Query(
-    const Uri &uri, const DataShare::DataSharePredicates &predicates, std::vector<std::string> &columns)
+std::shared_ptr<DataShare::DataShareResultSet> PdpProfileAbility::Query(const Uri &uri,
+    const DataShare::DataSharePredicates &predicates, std::vector<std::string> &columns,
+    DataShare::DatashareBusinessError &businessError)
 {
     std::shared_ptr<DataShare::DataShareResultSet> sharedPtrResult = nullptr;
     if (!IsInitOk()) {

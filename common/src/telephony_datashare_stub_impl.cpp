@@ -154,7 +154,7 @@ std::shared_ptr<DataShareResultSet> TelephonyDataShareStubImpl::Query(const Uri 
         DATA_STORAGE_LOGE("Query failed, extension is null.");
         return nullptr;
     }
-    resultSet = extension->Query(uri, predicates, columns);
+    resultSet = extension->Query(uri, predicates, columns, businessError);
     DATA_STORAGE_LOGI("Query end successfully.");
     return resultSet;
 }
