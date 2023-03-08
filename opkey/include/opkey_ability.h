@@ -54,7 +54,8 @@ public:
     virtual void OnStart(const AppExecFwk::Want &want) override;
     virtual int Insert(const Uri &uri, const DataShare::DataShareValuesBucket &value) override;
     virtual std::shared_ptr<DataShare::DataShareResultSet> Query(const Uri &uri,
-        const DataShare::DataSharePredicates &predicates, std::vector<std::string> &columns) override;
+        const DataShare::DataSharePredicates &predicates, std::vector<std::string> &columns,
+        DataShare::DatashareBusinessError &businessError) override;
     virtual int Update(const Uri &uri, const DataShare::DataSharePredicates &predicates,
         const DataShare::DataShareValuesBucket &value) override;
     virtual int Delete(const Uri &uri, const DataShare::DataSharePredicates &predicates) override;

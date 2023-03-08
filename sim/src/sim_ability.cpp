@@ -129,7 +129,8 @@ int SimAbility::Insert(const Uri &uri, const DataShare::DataShareValuesBucket &v
 }
 
 std::shared_ptr<DataShare::DataShareResultSet> SimAbility::Query(
-    const Uri &uri, const DataShare::DataSharePredicates &predicates, std::vector<std::string> &columns)
+    const Uri &uri, const DataShare::DataSharePredicates &predicates, std::vector<std::string> &columns,
+    DataShare::DatashareBusinessError &businessError)
 {
     std::shared_ptr<DataShare::DataShareResultSet> sharedPtrResult = nullptr;
     if (!IsInitOk()) {
