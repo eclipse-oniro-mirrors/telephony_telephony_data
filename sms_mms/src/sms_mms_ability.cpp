@@ -156,7 +156,8 @@ int SmsMmsAbility::Insert(const Uri &uri, const DataShare::DataShareValuesBucket
 }
 
 std::shared_ptr<DataShare::DataShareResultSet> SmsMmsAbility::Query(
-    const Uri &uri, const DataShare::DataSharePredicates &predicates, std::vector<std::string> &columns)
+    const Uri &uri, const DataShare::DataSharePredicates &predicates, std::vector<std::string> &columns,
+    DataShare::DatashareBusinessError &businessError)
 {
     if (!IsInitOk()) {
         return nullptr;
