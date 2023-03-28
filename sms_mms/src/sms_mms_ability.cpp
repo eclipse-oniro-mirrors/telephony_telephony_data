@@ -345,7 +345,8 @@ void SmsMmsAbility::InitUriMap()
         {"/sms_mms/sms_mms_info/unread_total", MessageUriType::UNREAD_TOTAL},
         {"/sms_mms/mms_protocol", MessageUriType::MMS_PROTOCOL},
         {"/sms_mms/sms_subsection", MessageUriType::SMS_SUBSECTION},
-        {"/sms_mms/mms_part", MessageUriType::MMS_PART}
+        {"/sms_mms/mms_part", MessageUriType::MMS_PART},
+        {"/sms_mms/session", MessageUriType::SESSION}
     };
 }
 
