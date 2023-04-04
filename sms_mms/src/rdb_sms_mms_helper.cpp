@@ -167,7 +167,7 @@ void RdbSmsMmsHelper::CreateSessionTableStr(std::string &createTableStr)
     createTableStr.append(Session::HAS_LOCK).append(" INTEGER DEFAULT 0 , ");
     createTableStr.append(Session::MESSAGE_COUNT).append(" INTEGER DEFAULT 0 , ");
     createTableStr.append(Session::HAS_MMS).append(" INTEGER DEFAULT 0 , ");
-    createTableStr.append(Session::HAS_ATTACHMENT).append(" INTEGER DEFAULT 0 , ");
+    createTableStr.append(Session::HAS_ATTACHMENT).append(" INTEGER DEFAULT 0 )");
 }
 
 void RdbSmsMmsHelper::UpdateDbPath(const std::string &path)
