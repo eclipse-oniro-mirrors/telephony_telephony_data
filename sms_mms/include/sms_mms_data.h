@@ -106,7 +106,7 @@ public:
     static constexpr const char *TELEPHONE = "telephone";
     static constexpr const char *CONTENT = "content";
     static constexpr const char *CONTACTS_NUM = "contacts_num";
-    static constexpr const char *SMS_TYPE = "sys_type";
+    static constexpr const char *SMS_TYPE = "sms_type";
     static constexpr const char *UNREAD_COUNT = "unread_count";
     static constexpr const char *SENDING_STATUS = "sending_status";
     static constexpr const char *HAS_DRAFT = "has_draft";
