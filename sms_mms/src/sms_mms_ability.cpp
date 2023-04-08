@@ -148,6 +148,10 @@ int SmsMmsAbility::Insert(const Uri &uri, const DataShare::DataShareValuesBucket
             helper_.Insert(id, values, TABLE_MMS_PART);
             break;
         }
+        case MessageUriType::SESSION: {
+            helper_.Insert(id, values, TABLE_SESSION);
+            break;
+        }
         default:
             DATA_STORAGE_LOGI("SmsMmsAbility::Insert##uri = %{public}s", uri.ToString().c_str());
             break;
@@ -182,6 +186,10 @@ std::shared_ptr<DataShare::DataShareResultSet> SmsMmsAbility::Query(
         }
         case MessageUriType::MMS_PART: {
             absRdbPredicates = new NativeRdb::AbsRdbPredicates(TABLE_MMS_PART);
+            break;
+        }
+        case MessageUriType::SESSION: {
+            absRdbPredicates = new NativeRdb::AbsRdbPredicates(TABLE_SESSION);
             break;
         }
         case MessageUriType::MAX_GROUP: {
@@ -242,6 +250,10 @@ int SmsMmsAbility::Update(
             absRdbPredicates = new NativeRdb::AbsRdbPredicates(TABLE_MMS_PART);
             break;
         }
+        case MessageUriType::SESSION: {
+            absRdbPredicates = new NativeRdb::AbsRdbPredicates(TABLE_SESSION);
+            break;
+        }
         default:
             DATA_STORAGE_LOGI("SmsMmsAbility::Update##uri = %{public}s", uri.ToString().c_str());
             break;
@@ -294,6 +306,10 @@ int SmsMmsAbility::Delete(const Uri &uri, const DataShare::DataSharePredicates &
             absRdbPredicates = new NativeRdb::AbsRdbPredicates(TABLE_MMS_PART);
             break;
         }
+        case MessageUriType::SESSION: {
+            absRdbPredicates = new NativeRdb::AbsRdbPredicates(TABLE_SESSION);
+            break;
+        }
         default:
             DATA_STORAGE_LOGI("SmsMmsAbility::Delete##uri = %{public}s", uri.ToString().c_str());
             break;
@@ -329,7 +345,8 @@ void SmsMmsAbility::InitUriMap()
         {"/sms_mms/sms_mms_info/unread_total", MessageUriType::UNREAD_TOTAL},
         {"/sms_mms/mms_protocol", MessageUriType::MMS_PROTOCOL},
         {"/sms_mms/sms_subsection", MessageUriType::SMS_SUBSECTION},
-        {"/sms_mms/mms_part", MessageUriType::MMS_PART}
+        {"/sms_mms/mms_part", MessageUriType::MMS_PART},
+        {"/sms_mms/session", MessageUriType::SESSION}
     };
 }
 
