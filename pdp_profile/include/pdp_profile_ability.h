@@ -51,6 +51,7 @@ enum class PdpProfileUriType {
     RESET,
     PREFER_APN,
     PSE_BASE_STATION,
+    SEARCHED_PLMN_LIST,
 };
 class PdpProfileAbility : public DataShare::DataShareExtAbility {
 public:
@@ -96,6 +97,7 @@ private:
      */
     bool IsInitOk();
     int UpdatePreferApn(const DataShare::DataShareValuesBucket &value);
+    int HandleResetApn(const DataShare::DataShareValuesBucket &value);
     int SetPreferApn(int simId, int profileId);
     int GetPreferApn(const std::string &queryString);
     std::string GetQueryKey(const std::string &queryString, const std::string &key);
@@ -113,11 +115,14 @@ private:
     bool initRdbStore = false;
     void GetTargetOpkey(int slotId, std::string &opkey);
     int ResetApn(const DataShare::DataShareValuesBucket &bucket);
+    int32_t GetNextPseRingId();
     int GetIntFromValuesBucket(OHOS::NativeRdb::ValuesBucket &bucket, const char *key, int &value);
     std::shared_ptr<NativeRdb::ResultSet> QueryPdpProfile(Uri &uri, const std::string &tableName,
         const DataShare::DataSharePredicates &predicates, std::vector<std::string> &columns);
     NativeRdb::AbsRdbPredicates* CreateAbsRdbPredicates(PdpProfileUriType type);
     std::shared_ptr<DataShare::DataShareResultSet> QueryPseBaseStation(const Uri &uri,
+        const DataShare::DataSharePredicates &predicates, std::vector<std::string> &columns);
+    std::shared_ptr<DataShare::DataShareResultSet> QuerySearchedPlmnList(const Uri &uri,
         const DataShare::DataSharePredicates &predicates, std::vector<std::string> &columns);
     int GetNativeData(std::shared_ptr<DataShare::DataShareResultSet> resultSet,
         int columnIndex, NativeData &data);

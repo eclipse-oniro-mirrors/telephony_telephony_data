@@ -37,17 +37,66 @@
 #include "uri.h"
 #include "utility"
 
+#include <chrono>
+#include <ctime>
+#include <iomanip>
+#include <sstream>
+
 namespace OHOS {
 using AppExecFwk::Ability;
 using AppExecFwk::AbilityLoader;
 namespace Telephony {
 const int32_t CHANGED_ROWS = 0;
+
+namespace {
+constexpr size_t PSE_TIME_STAMP_LENGTH = 17;
+constexpr int32_t PSE_MILLISECONDS_WIDTH = 3;
+constexpr int32_t PSE_MILLISECONDS_OF_ONE_SECOND = 1000;
+
+bool IsValidPseTimeStamp(const std::string &timeStamp)
+{
+    if (timeStamp.size() != PSE_TIME_STAMP_LENGTH) {
+        return false;
+    }
+    for (char digit : timeStamp) {
+        if (digit < '0' || digit > '9') {
+            return false;
+        }
+    }
+    return true;
+}
+
+std::string GetCurrentPseTimeStamp()
+{
+    auto timePoint = std::chrono::system_clock::now();
+    auto currentTime = std::chrono::system_clock::to_time_t(timePoint);
+    struct tm utcTime {};
+    gmtime_r(&currentTime, &utcTime);
+    std::stringstream ss;
+    ss << std::put_time(&utcTime, "%Y%m%d%H%M%S") << std::setw(PSE_MILLISECONDS_WIDTH) << std::setfill('0') <<
+        (std::chrono::duration_cast<std::chrono::milliseconds>(timePoint.time_since_epoch()).count() %
+        PSE_MILLISECONDS_OF_ONE_SECOND);
+    return ss.str();
+}
+
+std::string NormalizePseTimeStamp(const NativeRdb::ValuesBucket &values)
+{
+    NativeRdb::ValueObject value;
+    std::string date;
+    if (values.GetObject(PseBaseStationData::DATE, value) && value.GetString(date) == NativeRdb::E_OK &&
+        IsValidPseTimeStamp(date)) {
+        return date;
+    }
+    return GetCurrentPseTimeStamp();
+}
+} // namespace
 static const std::map<std::string, PdpProfileUriType> pdpProfileUriMap_ = {
     { "/net/pdp_profile", PdpProfileUriType::PDP_PROFILE },
     { "/net/pdp_profile/init", PdpProfileUriType::INIT},
     { "/net/pdp_profile/reset", PdpProfileUriType::RESET },
     { "/net/pdp_profile/preferapn", PdpProfileUriType::PREFER_APN },
     { "/net/pse_base_station", PdpProfileUriType::PSE_BASE_STATION },
+    { "/net/searched_plmn_list", PdpProfileUriType::SEARCHED_PLMN_LIST },
 };
 
 PdpProfileAbility::PdpProfileAbility() : DataShareExtAbility() {}
@@ -349,7 +398,19 @@ int PdpProfileAbility::Insert(const Uri &uri, const DataShare::DataShareValuesBu
         helper_.Insert(id, values, TABLE_PDP_PROFILE);
     } else if (pdpProfileUriType == PdpProfileUriType::PSE_BASE_STATION) {
         OHOS::NativeRdb::ValuesBucket values = RdbDataShareAdapter::RdbUtils::ToValuesBucket(value);
+        int32_t pseId = GetNextPseRingId();
+        if (pseId <= 0) {
+            DATA_STORAGE_LOGE("PdpProfileAbility::Insert##get pse ring id failed");
+            return DATA_STORAGE_ERROR;
+        }
+        std::string timeStamp = NormalizePseTimeStamp(values);
+        values.Put(PseBaseStationData::DATE, timeStamp);
+        values.Put(PseBaseStationData::TIME_STAMP, timeStamp);
+        values.Put(PseBaseStationData::ID, pseId);
         helper_.Insert(id, values, TABLE_PSE_BASE_STATION);
+    } else if (pdpProfileUriType == PdpProfileUriType::SEARCHED_PLMN_LIST) {
+        OHOS::NativeRdb::ValuesBucket values = RdbDataShareAdapter::RdbUtils::ToValuesBucket(value);
+        helper_.Insert(id, values, TABLE_SEARCHED_PLMN_LIST);
     } else {
         DATA_STORAGE_LOGE("PdpProfileAbility::Insert##uri = %{public}s", uri.ToString().c_str());
     }
@@ -431,9 +492,21 @@ std::shared_ptr<DataShare::DataShareResultSet> PdpProfileAbility::Query(const Ur
         return needUpdate ? newSharedPtrResult : sharedPtrResult;
     } else if (pdpProfileUriType == PdpProfileUriType::PSE_BASE_STATION) {
         return QueryPseBaseStation(uri, predicates, columns);
+    } else if (pdpProfileUriType == PdpProfileUriType::SEARCHED_PLMN_LIST) {
+        return QuerySearchedPlmnList(uri, predicates, columns);
     }
     DATA_STORAGE_LOGE("PdpProfileAbility::Query##uri = %{public}s", uri.ToString().c_str());
     return sharedPtrResult;
+}
+
+int PdpProfileAbility::HandleResetApn(const DataShare::DataShareValuesBucket &value)
+{
+    int result = ResetApn(value);
+    if (result != NativeRdb::E_OK) {
+        DATA_STORAGE_LOGE("PdpProfileAbility::Update  ResetApn fail!");
+        result = static_cast<int>(LoadProFileErrorType::RESET_APN_FAIL);
+    }
+    return result;
 }
 
 int PdpProfileAbility::Update(const Uri &uri, const DataShare::DataSharePredicates &predicates,
@@ -454,14 +527,11 @@ int PdpProfileAbility::Update(const Uri &uri, const DataShare::DataSharePredicat
     switch (pdpProfileUriType) {
         case PdpProfileUriType::PDP_PROFILE:
         case PdpProfileUriType::PSE_BASE_STATION:
+        case PdpProfileUriType::SEARCHED_PLMN_LIST:
             absRdbPredicates = CreateAbsRdbPredicates(pdpProfileUriType);
             break;
         case PdpProfileUriType::RESET: {
-            result = ResetApn(value);
-            if (result != NativeRdb::E_OK) {
-                DATA_STORAGE_LOGE("PdpProfileAbility::Update  ResetApn fail!");
-                result = static_cast<int>(LoadProFileErrorType::RESET_APN_FAIL);
-            }
+            result = HandleResetApn(value);
             break;
         }
         case PdpProfileUriType::PREFER_APN: {
@@ -717,6 +787,52 @@ void PdpProfileAbility::GetTargetOpkey(int slotId, std::string &opkey)
         "PdpProfileAbility::GetTargetOpkey##slotId = %{public}d, opkey = %{public}s", slotId, opkey.c_str());
 }
 
+int32_t PdpProfileAbility::GetNextPseRingId()
+{
+    const int32_t ringSize = 90;
+    int32_t count = 0;
+    auto countRs = helper_.QuerySql("SELECT COUNT(*) FROM " + std::string(TABLE_PSE_BASE_STATION) + ";");
+    if (countRs == nullptr || countRs->GoToFirstRow() != NativeRdb::E_OK ||
+        countRs->GetInt(0, count) != NativeRdb::E_OK) {
+        DATA_STORAGE_LOGE("PSE query count failed");
+        return DATA_STORAGE_ERROR;
+    }
+    if (count >= ringSize) {
+        int32_t oldestId = -1;
+        auto oldestRs = helper_.QuerySql("SELECT " + std::string(PseBaseStationData::ID) + " FROM " +
+            std::string(TABLE_PSE_BASE_STATION) + " ORDER BY CASE WHEN length(" +
+            std::string(PseBaseStationData::TIME_STAMP) + ") = 17 THEN " +
+            std::string(PseBaseStationData::TIME_STAMP) + " WHEN length(" +
+            std::string(PseBaseStationData::DATE) + ") = 8 THEN " +
+            std::string(PseBaseStationData::DATE) + " || '000000000' ELSE " +
+            std::string(PseBaseStationData::DATE) + " END ASC, " +
+            std::string(PseBaseStationData::ID) + " ASC LIMIT 1;");
+        if (oldestRs == nullptr || oldestRs->GoToFirstRow() != NativeRdb::E_OK ||
+            oldestRs->GetInt(0, oldestId) != NativeRdb::E_OK) {
+            DATA_STORAGE_LOGE("PSE query oldest id failed");
+            return DATA_STORAGE_ERROR;
+        }
+        if (oldestId > 0) {
+            DATA_STORAGE_LOGI("PSE full, replace oldest id = %{public}d", oldestId);
+            return oldestId;
+        }
+    }
+    int32_t freeId = -1;
+    auto freeRs = helper_.QuerySql("SELECT MIN(n) FROM (WITH RECURSIVE seq(n) AS (SELECT 1 UNION ALL "
+        "SELECT n + 1 FROM seq WHERE n < " + std::to_string(ringSize) + ") SELECT n FROM seq) WHERE n NOT IN (SELECT " +
+        std::string(PseBaseStationData::ID) + " FROM " + std::string(TABLE_PSE_BASE_STATION) + ");");
+    if (freeRs == nullptr || freeRs->GoToFirstRow() != NativeRdb::E_OK ||
+        freeRs->GetInt(0, freeId) != NativeRdb::E_OK) {
+        DATA_STORAGE_LOGE("PSE query free id failed");
+        return DATA_STORAGE_ERROR;
+    }
+    if (freeId < 1 || freeId > ringSize) {
+        DATA_STORAGE_LOGE("PSE invalid free id = %{public}d", freeId);
+        return DATA_STORAGE_ERROR;
+    }
+    return freeId;
+}
+
 std::shared_ptr<DataShare::DataShareResultSet> PdpProfileAbility::QueryPseBaseStation(const Uri &uri,
     const DataShare::DataSharePredicates &predicates, std::vector<std::string> &columns)
 {
@@ -735,6 +851,22 @@ std::shared_ptr<DataShare::DataShareResultSet> PdpProfileAbility::QueryPseBaseSt
     return sharedPtrResult;
 }
 
+std::shared_ptr<DataShare::DataShareResultSet> PdpProfileAbility::QuerySearchedPlmnList(const Uri &uri,
+    const DataShare::DataSharePredicates &predicates, std::vector<std::string> &columns)
+{
+    std::shared_ptr<NativeRdb::AbsRdbPredicates> absRdbPredicates =
+        std::make_shared<NativeRdb::AbsRdbPredicates>(TABLE_SEARCHED_PLMN_LIST);
+    std::shared_ptr<NativeRdb::ResultSet> result = helper_.Query(ConvertPredicates(
+        absRdbPredicates->GetTableName(), predicates), columns);
+    if (result == nullptr) {
+        DATA_STORAGE_LOGE("PdpProfileAbility::Query NativeRdb::ResultSet is null!");
+        return nullptr;
+    }
+    auto queryResultSet = RdbDataShareAdapter::RdbUtils::ToResultSetBridge(result);
+    auto sharedPtrResult = std::make_shared<DataShare::DataShareResultSet>(queryResultSet);
+    return sharedPtrResult;
+}
+
 NativeRdb::AbsRdbPredicates* PdpProfileAbility::CreateAbsRdbPredicates(PdpProfileUriType type)
 {
     NativeRdb::AbsRdbPredicates *absRdbPredicates = nullptr;
@@ -744,6 +876,9 @@ NativeRdb::AbsRdbPredicates* PdpProfileAbility::CreateAbsRdbPredicates(PdpProfil
             break;
         case PdpProfileUriType::PSE_BASE_STATION:
             absRdbPredicates = new NativeRdb::AbsRdbPredicates(TABLE_PSE_BASE_STATION);
+            break;
+        case PdpProfileUriType::SEARCHED_PLMN_LIST:
+            absRdbPredicates = new NativeRdb::AbsRdbPredicates(TABLE_SEARCHED_PLMN_LIST);
             break;
         default:
             break;
