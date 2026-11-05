@@ -41,10 +41,16 @@ int RdbPdpProfileHelper::Init()
     CreatePseBaseStationTableStr(pseBaseStationStr, TABLE_PSE_BASE_STATION);
     std::string pseBaseStationTriggerStr;
     CreatePseBaseStationTriggerStr(pseBaseStationTriggerStr, TABLE_PSE_BASE_STATION);
+    std::string searchedPlmnListStr;
+    CreateSearchedPlmnListTableStr(searchedPlmnListStr, TABLE_SEARCHED_PLMN_LIST);
+    std::string searchedPlmnListTriggerStr;
+    CreateSearchedPlmnListTriggerStr(searchedPlmnListTriggerStr, TABLE_SEARCHED_PLMN_LIST);
     std::vector<std::string> createTableVec;
     createTableVec.push_back(pdpProfileStr);
     createTableVec.push_back(pseBaseStationStr);
     createTableVec.push_back(pseBaseStationTriggerStr);
+    createTableVec.push_back(searchedPlmnListStr);
+    createTableVec.push_back(searchedPlmnListTriggerStr);
     RdbPdpProfileCallback callback(createTableVec);
     CreateRdbStore(config, VERSION, callback, errCode);
     return errCode;
@@ -106,16 +112,46 @@ void RdbPdpProfileHelper::CreatePseBaseStationTableStr(std::string &createTableS
     createTableStr.append(PseBaseStationData::ID).append(" INTEGER PRIMARY KEY AUTOINCREMENT, ");
     createTableStr.append(PseBaseStationData::DATE).append(" TEXT NOT NULL, ");
     createTableStr.append(PseBaseStationData::COUNT).append(" INTEGER NOT NULL, ");
+    createTableStr.append(PseBaseStationData::TIME_STAMP).append(" TEXT, ");
     createTableStr.append("UNIQUE (").append(PseBaseStationData::DATE).append("));");
 }
 
 void RdbPdpProfileHelper::CreatePseBaseStationTriggerStr(std::string &createTableStr, const std::string &tableName)
 {
-    createTableStr.append("CREATE TRIGGER IF NOT EXISTS pse_trigger BEFORE INSERT ON ").append(tableName);
+    createTableStr.append("CREATE TRIGGER IF NOT EXISTS ").append(PseBaseStationData::PSE_TRIGGER_NAME)
+        .append(" BEFORE INSERT ON ").append(tableName);
+    createTableStr.append(" BEGIN ");
+    createTableStr.append("DELETE FROM ").append(tableName).append(" WHERE (length(")
+        .append(PseBaseStationData::TIME_STAMP).append(") = 17 AND ")
+        .append(PseBaseStationData::TIME_STAMP)
+        .append(" < strftime('%Y%m%d%H%M%S','now','utc','-30 days') || '000') OR (")
+        .append(PseBaseStationData::TIME_STAMP).append(" IS NULL AND length(")
+        .append(PseBaseStationData::DATE).append(") = 8 AND ")
+        .append(PseBaseStationData::DATE)
+        .append(" < strftime('%Y%m%d','now','utc','-30 days')); ");
+    createTableStr.append("DELETE FROM ").append(tableName).append(" WHERE ")
+        .append(PseBaseStationData::ID).append(" = NEW.id; END;");
+}
+
+void RdbPdpProfileHelper::CreateSearchedPlmnListTableStr(std::string &createTableStr, const std::string &tableName)
+{
+    createTableStr.append("CREATE TABLE IF NOT EXISTS ").append(tableName).append("( ");
+    createTableStr.append(SearchedPlmnListData::ID).append(" INTEGER PRIMARY KEY AUTOINCREMENT, ");
+    createTableStr.append(SearchedPlmnListData::STAT).append(" INTEGER NOT NULL, ");
+    createTableStr.append(SearchedPlmnListData::PLMN).append(" TEXT NOT NULL, ");
+    createTableStr.append(SearchedPlmnListData::RAT).append(" INTEGER NOT NULL, ");
+    createTableStr.append(SearchedPlmnListData::RSCP).append(" INTEGER NOT NULL, ");
+    createTableStr.append(SearchedPlmnListData::TIMESTAMP).append(" TEXT NOT NULL, ");
+    createTableStr.append("UNIQUE (").append(SearchedPlmnListData::TIMESTAMP).append("));");
+}
+
+void RdbPdpProfileHelper::CreateSearchedPlmnListTriggerStr(std::string &createTableStr, const std::string &tableName)
+{
+    createTableStr.append("CREATE TRIGGER IF NOT EXISTS plmn_trigger BEFORE INSERT ON ").append(tableName);
     createTableStr.append(" WHEN (SELECT COUNT (*) FROM ").append(tableName);
-    createTableStr.append(") >= 90 BEGIN DELETE FROM ").append(tableName);
-    createTableStr.append(" WHERE ").append(PseBaseStationData::ID);
-    createTableStr.append(" = (SELECT MIN(").append(PseBaseStationData::ID);
+    createTableStr.append(") >= 50 BEGIN DELETE FROM ").append(tableName);
+    createTableStr.append(" WHERE ").append(SearchedPlmnListData::TIMESTAMP);
+    createTableStr.append(" = (SELECT MIN(").append(SearchedPlmnListData::TIMESTAMP);
     createTableStr.append(") FROM ").append(tableName).append("); END;");
 }
 
